@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__context7__resolve-library-id",
+      "WebSearch",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:docs.anthropic.com)",
+      "mcp__plugin_oh-my-claudecode_t__state_write",
+      "Bash(curl:*)",
+      "Bash(npm:*)",
+      "Bash(pip show:*)",
+      "Bash(mkdir:*)",
+      "Bash(jupytext:*)",
+      "Bash(codex:*)",
+      "Bash(omc team:*)",
+      "Bash(tmux new-window:*)",
+      "Bash(tmux list-windows:*)",
+      "Bash(npx skills:*)",
+      "Bash(echo TMUX=$TMUX:*)",
+      "Bash(tmux capture-pane:*)",
+      "Bash(gemini:*)",
+      "Bash(lsof:*)",
+      "WebFetch(domain:www.markdownguide.org)",
+      "WebFetch(domain:developers.notion.com)",
+      "WebFetch(domain:super.so)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:uno.notion.vip)",
+      "WebFetch(domain:brittonhayes.dev)",
+      "WebFetch(domain:www.notion.com)",
+      "Bash(which slidev:*)",
+      "WebFetch(domain:www.goinsight.ai)",
+      "WebFetch(domain:theproductivity.co)",
+      "Bash(npx slidev:*)",
+      "mcp__claude_ai_Notion__notion-create-pages",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Read(//Applications/Google Chrome.app/**)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(pip3 list:*)"
+    ]
+  }
+}

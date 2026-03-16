@@ -1,0 +1,29 @@
+# 실습 05: LangGraph Control Flow 자동화 스크립트
+
+default:
+    @just --list
+
+setup:
+    pip install langgraph
+
+run-i-do:
+    python src/i-do/control_flow.py
+
+run-we-do:
+    python src/we-do/control_flow.py
+
+run:
+    python src/you-do/control_flow.py
+
+run-solution:
+    python solution/control_flow.py
+
+test:
+    @python -c "import pathlib, sys; sys.path.insert(0, 'src/you-do'); import control_flow as lab; cases = {'비밀번호 재설정 권한을 열어주세요': 'access', '결제 영수증과 환불 상태를 확인하고 싶어요': 'billing', '배포 후 서비스 장애가 발생했습니다': 'incident'}; [print('[PASS]' if (actual := lab.determine_route(text)) == expected else '[FAIL]', f'determine_route({text!r}) -> {actual}') for text, expected in cases.items()]; finish_state = {'route': 'incident', 'confidence': 0.91, 'attempts': 1, 'max_attempts': 2}; retry_state = {'route': 'incident', 'confidence': 0.45, 'attempts': 1, 'max_attempts': 3}; fallback_state = {'route': 'incident', 'confidence': 0.45, 'attempts': 3, 'max_attempts': 3}; print('[PASS]' if lab.route_after_quality(finish_state) == 'finish' else '[FAIL]', 'finish path'); print('[PASS]' if lab.route_after_quality(retry_state) == 'incident' else '[FAIL]', 'retry path'); print('[PASS]' if lab.route_after_quality(fallback_state) == 'fallback' else '[FAIL]', 'fallback path'); source = pathlib.Path('src/you-do/control_flow.py').read_text(); print('[WARN] YOU DO 파일에 TODO가 남아 있습니다' if 'TODO' in source else '[PASS] YOU DO 파일에 TODO 없음'); print('[PASS]' if 'build_graph' in source else '[FAIL]', 'build_graph 존재 여부')"
+
+verify-solution:
+    python solution/control_flow.py
+
+clean:
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.pyc" -delete 2>/dev/null || true

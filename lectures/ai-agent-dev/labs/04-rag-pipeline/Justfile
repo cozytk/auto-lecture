@@ -1,0 +1,80 @@
+# 실습 04: RAG 파이프라인 구현
+
+export OPENROUTER_API_KEY := env_var_or_default("OPENROUTER_API_KEY", "")
+export MODEL := env_var_or_default("MODEL", "moonshotai/kimi-k2")
+
+# 기본: 도움말 출력
+default:
+    @just --list
+
+# 환경 설정
+setup:
+    pip install openai numpy
+
+# I DO: 시연 코드 실행
+run-i-do:
+    python src/i-do/rag_pipeline.py
+
+# WE DO: 함께 실습 실행
+run-we-do:
+    python src/we-do/rag_pipeline.py
+
+# YOU DO: 학생 과제 실행
+run:
+    python src/you-do/rag_pipeline.py
+
+# 정답 확인
+run-solution:
+    python solution/rag_pipeline.py
+
+# 테스트 실행
+test:
+    @echo "=== RAG 파이프라인 구현 검증 ==="
+    @python -c "
+import sys
+sys.path.insert(0, 'src/you-do')
+import rag_pipeline as rag
+
+# 문서 수 검증
+doc_count = len(rag.documents)
+status = 'PASS' if doc_count >= 5 else 'FAIL'
+print(f'[{status}] 문서 수: {doc_count}개 (5개 이상 필요)')
+
+# embed 함수 구현 여부
+import inspect
+embed_src = inspect.getsource(rag.embed)
+if 'embeddings.create' in embed_src or 'client.embeddings' in embed_src:
+    print('[PASS] embed 함수: API 호출 구현됨')
+else:
+    print('[FAIL] embed 함수: embeddings.create 호출이 없습니다')
+
+# retrieve 함수 구현 여부
+retrieve_src = inspect.getsource(rag.retrieve)
+if 'np.dot' in retrieve_src or 'cosine' in retrieve_src.lower():
+    print('[PASS] retrieve 함수: 코사인 유사도 계산 구현됨')
+else:
+    print('[FAIL] retrieve 함수: 코사인 유사도(np.dot) 계산이 없습니다')
+
+# rag_answer 함수 구현 여부
+rag_src = inspect.getsource(rag.rag_answer)
+if 'retrieve' in rag_src:
+    print('[PASS] rag_answer 함수: retrieve 호출 있음')
+else:
+    print('[FAIL] rag_answer 함수: retrieve 호출 없음')
+if 'TODO' in rag_src:
+    print('[WARN] rag_answer 함수: TODO 주석이 남아있습니다')
+
+# test_queries 검증
+q_count = len(rag.test_queries)
+status = 'PASS' if q_count >= 3 else 'FAIL'
+print(f'[{status}] 테스트 질문: {q_count}개 (3개 이상 필요)')
+
+print()
+print('주의: 실제 API 호출 테스트는 OPENROUTER_API_KEY 필요')
+"
+
+# 초기화
+clean:
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.pyc" -delete 2>/dev/null || true
+    @echo "정리 완료"

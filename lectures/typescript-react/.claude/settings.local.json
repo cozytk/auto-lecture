@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @playwright/mcp --help 2>/dev/null || echo \"Playwright MCP not installed globally\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3030/1 2>/dev/null || echo \"not running\")",
+      "Bash(node screenshot-all.mjs 2>&1)",
+      "Bash(npm install:*)",
+      "Bash(command -v tmux && echo \"TMUX=$TMUX\")",
+      "Bash(command -v codex 2>/dev/null && echo \"codex found\" || echo \"codex not found\")",
+      "Bash(sed -n '139p' /Users/taekkim/auto-lecture/lectures/typescript-react/slides/slides.md && sed -n '188p' /Users/taekkim/auto-lecture/lectures/typescript-react/slides/slides.md && sed -n '2195,2225p' /Users/taekkim/auto-lecture/lectures/typescript-react/slides/slides.md)",
+      "Bash(node fetch-exercises.mjs 2>&1)",
+      "Bash(cd /Users/taekkim/auto-lecture/lectures/typescript-react/slides && npx slidev export --dark --with-clicks)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(cd /Users/taekkim/auto-lecture && python .openagent/bin/sync.py 2>&1)"
+    ]
+  }
+}

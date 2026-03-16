@@ -1,0 +1,29 @@
+# 실습 06: Tool Validation Guard 자동화 스크립트
+
+default:
+    @just --list
+
+setup:
+    pip install langgraph
+
+run-i-do:
+    python src/i-do/tool_guard.py
+
+run-we-do:
+    python src/we-do/tool_guard.py
+
+run:
+    python src/you-do/tool_guard.py
+
+run-solution:
+    python solution/tool_guard.py
+
+test:
+    @python -c "import pathlib, sys; sys.path.insert(0, 'src/you-do'); import tool_guard as lab; valid = {'requested_tool': 'search_docs', 'tool_args': {'query': 'incident playbook', 'limit': 3}, 'schema_ok': False, 'policy_ok': False, 'context_ok': False, 'result_ok': False, 'call_count': 0, 'max_calls': 3, 'last_tool': '', 'approved_by_human': False, 'tool_result': {}, 'errors': [], 'audit_log': []}; print('[PASS]' if lab.schema_validation(valid)['schema_ok'] else '[FAIL]', 'schema valid case'); invalid = dict(valid); invalid['tool_args'] = {'limit': 20}; print('[PASS]' if not lab.schema_validation(invalid)['schema_ok'] else '[FAIL]', 'schema invalid case'); danger = dict(valid); danger['requested_tool'] = 'delete_ticket'; policy = lab.policy_validation(danger); print('[PASS]' if not policy['policy_ok'] else '[FAIL]', 'policy reject destructive tool'); context_state = dict(valid); context_state['last_tool'] = 'search_docs'; context = lab.context_validation(context_state); print('[PASS]' if not context['context_ok'] else '[FAIL]', 'context duplicate guard'); entry = lab.make_audit_entry(valid, 'approved', 'ok'); print('[PASS]' if entry['status'] == 'approved' and entry['tool'] == 'search_docs' else '[FAIL]', 'audit entry'); source = pathlib.Path('src/you-do/tool_guard.py').read_text(); print('[WARN] YOU DO 파일에 TODO가 남아 있습니다' if 'TODO' in source else '[PASS] YOU DO 파일에 TODO 없음')"
+
+verify-solution:
+    python solution/tool_guard.py
+
+clean:
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.pyc" -delete 2>/dev/null || true
