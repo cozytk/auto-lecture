@@ -1,78 +1,171 @@
-# Day 1 Lab Pack: 문제 정의 -> 프롬프트 -> 기획서 -> 구조 판단
+# Day 1 실습
 
-Day 1은 **이론 3 : 실습 7** 비율을 기준으로 운영한다.
-이 문서는 Day 1 전체 실습 동선을 한 번에 따라갈 수 있도록 정리한 실습 패키지다.
+## 실습 목록
 
-## Day 1 운영 원칙
+| 세션 | 실습 | 주제 | 유형 |
+|:----:|------|------|------|
+| 1교시 | [s1-agent-problem-definition](./s1-agent-problem-definition/) | Agent 문제 정의 — Pain→Task→Skill→Tool + 3가지 Agent 시연 | 시연 + 설계 |
+| 2교시 | [s2-context-strategy](./s2-context-strategy/) | 컨텍스트 전략 심화 — System Prompt/메모리/Structured Output + LangSmith | 코드 실습 |
+| 3교시 | [s3-agent-blueprint](./s3-agent-blueprint/) | Agent 구조 다이어그램 — Excalidraw로 Workflow 시각화 | 설계 |
+| 4교시 | [s4-architecture-decision](./s4-architecture-decision/) | MCP(Tool) vs RAG 구조 비교 — 같은 문제를 두 방식으로 해결 | 코드 실습 |
 
-- Day 1 총 수업 시간: 480분
-- 권장 이론 시간: 약 145분
-- 권장 실습 시간: 약 335분
-- 실습은 **코드 실습 + README 중심 실습**을 함께 사용한다.
-- 코드가 학습 목표에 직접 기여하지 않으면 억지로 Python 파일을 만들지 않는다.
+---
 
-## Day 1 실습 흐름
+## 환경 세팅
 
-| 순서 | 실습 | 형식 | 연관 세션 | 권장 시간 |
-|------|------|------|----------|----------|
-| 1 | [01-agent-opportunity-workshop](01-agent-opportunity-workshop/README.md) | README 중심 | Session 1 | 75분 |
-| 2 | [`../01-prompt-strategy`](../01-prompt-strategy/README.md) | 코드 | Session 2 | 30분 |
-| 3 | [`../02-structured-output`](../02-structured-output/README.md) | 코드 | Session 2 | 35분 |
-| 4 | [02-cost-latency-design-clinic](02-cost-latency-design-clinic/README.md) | README 중심 | Session 2 | 20분 |
-| 5 | [03-agent-spec-studio](03-agent-spec-studio/README.md) | README 중심 | Session 3 | 75분 |
-| 6 | [`../03-function-calling`](../03-function-calling/README.md) | 코드 | Session 4 | 30분 |
-| 7 | [`../04-rag-pipeline`](../04-rag-pipeline/README.md) | 코드 | Session 4 | 30분 |
-| 8 | [04-architecture-decision-clinic](04-architecture-decision-clinic/README.md) | README 중심 | Session 4 | 25분 |
-| 9 | Day 1 실습 회고 및 연결 | README 중심 | Day 1 전체 | 15분 |
+### 1. uv 설치
 
-**실습 총량 합계**: 335분
+uv는 Rust로 만든 Python 패키지 매니저로, pip보다 10~100배 빠릅니다.
 
-## 실습 결과로 남겨야 하는 핵심 산출물
+```bash
+# Linux / WSL
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-- Agent 후보 2개 이상과 선정 근거
-- 프롬프트 전략 비교 결과표
-- Structured Output 설계 규칙 요약
-- 비용/Latency 최적화 설계 메모
-- Agent 기획서 초안 1개
-- 기획서 품질 개선 기록 1개
-- 기술 설계 보완 메모 1개
-- MCP / RAG / Hybrid 의사결정표 1개
+# 설치 후 셸 재시작 또는 PATH 적용
+source $HOME/.local/bin/env
+```
 
-## 권장 진행 방식
+설치 확인:
 
-### 1. Session 1 직후
+```bash
+uv --version
+```
 
-- `01-agent-opportunity-workshop`으로 Pain-Task-Skill-Tool 분석부터 시작한다.
-- 아직 코드를 만들지 않는다.
-- Day 1의 나머지 모든 실습에서 사용할 후보 2개를 여기서 확정한다.
+### 2. 의존성 설치
 
-### 2. Session 2 직후
+이 디렉토리(`day1/`)에서 아래 명령어 한 번이면 가상환경 생성 + 패키지 설치가 완료됩니다.
 
-- 코드 실습 2개(`01-prompt-strategy`, `02-structured-output`)를 수행한다.
-- 이어서 `02-cost-latency-design-clinic`에서 "어떤 전략을 언제 쓸지"를 문서로 정리한다.
+```bash
+cd day1
+uv sync
+```
 
-### 3. Session 3 직후
+> `uv sync`는 `pyproject.toml`을 읽어 `.venv/` 가상환경을 자동 생성하고 모든 의존성을 설치합니다.
+> Python 버전도 `.python-version` 파일에 따라 자동으로 설치합니다.
 
-- `03-agent-spec-studio`에서 Day 1 오전에 고른 후보를 실제 기획서로 변환한다.
-- 이 산출물은 Session 4 실습과 Day 5 MVP 설계의 입력값으로 사용한다.
+### 3. 환경변수 설정
 
-### 4. Session 4 직후
+`.env` 파일을 `day1/` 디렉토리에 생성합니다.
 
-- 코드 실습 2개(`03-function-calling`, `04-rag-pipeline`)로 실행 감각을 확보한다.
-- 마지막에 `04-architecture-decision-clinic`으로 MCP / RAG / Hybrid 선택을 정리한다.
+```bash
+cp .env.example .env   # 또는 직접 생성
+```
 
-## Day 1 종료 체크리스트
+![교육용 API KEY 노션](https://teamsparta.notion.site/GPT-api-key-0332dc3ef5148217807001b7a6b067b8?source=copy_link)
 
-- [ ] Agent 후보 2개가 Pain 기준으로 정리되었는가
-- [ ] Session 2의 전략 선택 결과를 비용/정확도 관점에서 설명할 수 있는가
-- [ ] Agent 기획서가 목적, 입력, 출력, 제약, 성공 기준, 범위를 모두 포함하는가
-- [ ] Session 4에서 MCP / RAG / Hybrid 중 하나를 선택하고 대안을 배제한 이유를 말할 수 있는가
-- [ ] Day 5 MVP로 이어질 핵심 후보 1개를 확정했는가
+```env
+OPENAI_API_KEY=sk-your-key-here
+```
 
-## Day 2로 가져갈 것
+### 4. 실시간 API 연동 (선택)
 
-Day 2부터는 Day 1에서 만든 산출물을 그대로 사용한다.
+실습에서 사용하는 도구들은 실제 API를 호출합니다. API 키가 없어도 fallback으로 실습이 가능하지만,
+실제 API를 연동하면 더 현실적인 결과를 확인할 수 있습니다.
 
-- Session 1/3 워크숍 결과 -> Day 2 구조 설계 입력
-- Session 2 전략 비교 결과 -> Day 2 Tool/Validation 설계 기준
-- Session 4 의사결정표 -> Day 3~5 아키텍처 기준선
+#### GitHub Token 발급
+
+GitHub API rate limit을 높이려면 Personal Access Token을 발급합니다.
+토큰이 없어도 공개 저장소 이슈 조회는 가능합니다 (시간당 60회 제한).
+
+1. [github.com](https://github.com) → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. "Generate new token" 클릭 → Token name, Expiration 설정
+3. Repository access: **Public Repositories (read-only)** 선택
+4. 토큰 복사 → `.env` 파일에 추가:
+
+```bash
+GITHUB_TOKEN=ghp_your-token-here
+```
+
+#### Slack Bot 생성 + Token 발급
+
+Slack 메시지 발송을 위해 Bot을 생성하고 OAuth Token을 발급합니다.
+토큰이 없으면 메시지가 콘솔에만 출력됩니다.
+
+1. [api.slack.com/apps](https://api.slack.com/apps) 접속 → **Create New App** → **From scratch**
+2. App Name 입력 (예: `day1-lab-bot`), 워크스페이스 선택 → **Create App**
+3. 좌측 메뉴 **OAuth & Permissions** → Bot Token Scopes에 `chat:write` 추가
+4. 상단 **Install to Workspace** → **Allow** → `xoxb-...` 토큰 복사
+5. Slack 채널에서 `/invite @day1-lab-bot` 으로 봇 초대
+6. `.env` 파일에 추가:
+
+```bash
+SLACK_BOT_TOKEN=xoxb-your-bot-token-here
+SLACK_CHANNEL=general
+```
+
+#### DuckDuckGo 검색
+
+API 키 불필요 — `uv sync` 후 자동으로 사용 가능합니다.
+네트워크가 불안정하면 자동으로 mock 데이터로 전환됩니다.
+
+### 5. Jupyter Notebook 실행
+
+실습은 Jupyter Notebook(`.ipynb`) 파일로 구성되어 있습니다.
+`day1/` 디렉토리에서 아래 명령어로 Jupyter Lab을 실행합니다.
+
+```bash
+uv run jupyter lab
+```
+
+브라우저가 열리면 각 실습 폴더의 `src/` 디렉토리에서 노트북을 열어 셀을 순서대로 실행하세요.
+
+> 가상환경을 직접 활성화하고 싶다면: `source .venv/bin/activate` 후 `jupyter lab`
+
+---
+
+## uv 주요 명령어
+
+실습 중 자주 쓰는 명령어만 정리했습니다.
+
+### 의존성 설치/관리
+
+```bash
+# 의존성 설치 (pyproject.toml 기준)
+uv sync
+
+# 패키지 추가
+uv add requests
+
+# 패키지 제거
+uv remove requests
+
+# 잠금 파일만 갱신 (설치 없이)
+uv lock
+```
+
+### 코드 실행
+
+```bash
+# Jupyter Notebook 실행
+uv run jupyter lab
+
+# 가상환경 내에서 Python 실행 (스크립트 직접 실행 시)
+uv run python script.py
+
+# 가상환경 내에서 모듈 실행
+uv run python -m pytest
+```
+
+### 가상환경 관리
+
+```bash
+# 가상환경 직접 생성 (보통 uv sync가 자동 처리)
+uv venv
+
+# 설치된 패키지 목록 확인
+uv pip list
+
+# 특정 패키지 정보 확인
+uv pip show openai
+```
+
+### pip과 비교
+
+| 작업 | pip | uv |
+|------|-----|-----|
+| 가상환경 생성 | `python -m venv .venv` | `uv venv` (또는 `uv sync` 시 자동) |
+| 의존성 설치 | `pip install -r requirements.txt` | `uv sync` |
+| 패키지 추가 | `pip install requests` + 수동으로 requirements.txt 수정 | `uv add requests` |
+| 패키지 제거 | `pip uninstall requests` + 수동 삭제 | `uv remove requests` |
+| 스크립트 실행 | `source .venv/bin/activate && python script.py` | `uv run python script.py` |
+| Jupyter 실행 | `source .venv/bin/activate && jupyter lab` | `uv run jupyter lab` |

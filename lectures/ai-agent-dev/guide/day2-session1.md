@@ -1,691 +1,618 @@
-# Session 1: Agent 4요소 구조 설계
+# Day 2 Session 1: Agent 4요소 구조 설계
 
-## 학습 목표
-1. Agent를 구성하는 4요소(Goal, Memory, Tool, Control Logic)의 역할과 상호작용을 설명할 수 있다
-2. Planner-Executor 패턴을 이해하고 Sub-task 분해 전략을 설계할 수 있다
-3. Single-step Agent와 Multi-step Agent의 차이를 판단하고 적절한 구조를 선택할 수 있다
+> **2시간** | AI 개발자, 데이터 엔지니어, 기술 리더 대상
 
----
-
-## 1. Agent 4요소 개요: Goal, Memory, Tool, Control Logic
-
-### 개념 설명
-
-AI Agent는 단순한 LLM 호출과 달리 **목표를 가지고 자율적으로 행동**하는 시스템이다. ChatGPT에 질문을 던지고 답변을 받는 것은 "1회성 입출력 함수 호출"에 불과하다. 반면 Agent는 스스로 다음에 무엇을 해야 할지 판단하고, 필요한 도구를 선택하며, 중간 결과를 기억하면서 목표를 향해 반복적으로 행동한다. 이 차이를 만드는 핵심 구성 요소가 바로 4가지다.
-
-**왜 이 4요소 프레임워크가 등장했는가?** 2023년 이후 LLM 기반 자율 시스템을 설계하려는 시도가 폭발적으로 증가하면서, 연구자와 엔지니어들은 "잘 동작하는 Agent"와 "실패하는 Agent"를 구분짓는 공통 패턴을 발견했다. AutoGPT, BabyAGI, HuggingGPT 같은 초기 Agent 프로젝트들이 보여준 교훈은 명확했다. 목표 없이 방황하는 Agent, 이전 시도를 기억하지 못해 같은 실수를 반복하는 Agent, 도구를 사용하지 못해 "생각만 하는" Agent, 다음 행동을 결정하지 못해 무한 루프에 빠지는 Agent -- 이 모든 실패 유형이 4가지 요소 중 하나 이상이 결여되어 있었다.
-
-이 4요소를 현실 세계에 비유하면 이해가 쉽다. **Goal**은 팀의 미션 스테이트먼트다. "이번 분기 매출 20% 성장"이라는 목표가 없으면 팀원들은 무엇을 해야 할지 모른다. **Memory**는 팀의 공유 지식 베이스이자 회의록이다. 지난 회의에서 무엇을 결정했는지, 어떤 데이터를 이미 수집했는지 기록하지 않으면 매번 처음부터 시작해야 한다. **Tool**은 팀원들이 사용하는 실무 도구(Slack, Jira, 데이터베이스, 이메일)다. 아무리 똑똑한 팀이라도 도구 없이는 실행력이 제로다. **Control Logic**은 프로젝트 매니저의 판단력이다. "이 데이터가 충분한가?", "다음에 어떤 도구를 써야 하는가?", "이제 멈춰야 하는가?"를 결정하는 두뇌 역할을 한다.
-
-학계에서는 이와 유사한 구조가 여러 프레임워크로 제안되어 왔다. ReAct(Reasoning + Acting)는 추론과 행동을 번갈아 수행하며, LATS(Language Agent Tree Search)는 트리 탐색 기반으로 최적 행동 경로를 찾는다. Reflexion은 자기 반성 메커니즘을 추가하여 이전 실패로부터 학습한다. 이들 모두 결국 "목표 설정 -> 맥락 기억 -> 도구 사용 -> 다음 행동 결정"이라는 공통 골격을 공유하며, 이것이 곧 Goal-Memory-Tool-Control Logic 4요소 프레임워크의 본질이다.
-
-| 요소 | 역할 | 예시 |
-|------|------|------|
-| **Goal** | Agent가 달성해야 할 목표 정의 | "사용자 질문에 대해 DB를 조회하여 정확한 답변 제공" |
-| **Memory** | 과거 상호작용과 중간 결과 저장 | 대화 히스토리, 이전 Tool 호출 결과, 작업 상태 |
-| **Tool** | 외부 세계와 상호작용하는 도구 | API 호출, DB 조회, 파일 읽기/쓰기, 웹 검색 |
-| **Control Logic** | 다음 행동을 결정하는 제어 로직 | 조건 분기, 반복, 종료 조건, 에러 처리 |
-
-```
-+-----------------------------------------+
-|                 Agent                    |
-|                                          |
-|   +----------+     +--------------+     |
-|   |   Goal   |---->|Control Logic |     |
-|   +----------+     +------+-------+     |
-|                           |              |
-|                    +------+------+       |
-|                    v             v       |
-|              +----------+ +----------+  |
-|              |  Memory  | |   Tool   |  |
-|              +----------+ +----------+  |
-+-----------------------------------------+
-```
-
-실무에서 주의할 점은 4요소의 **균형**이다. Goal이 지나치게 추상적이면 Agent가 방향을 잡지 못하고, 지나치게 구체적이면 유연성을 잃는다. Memory에 모든 것을 저장하면 context window를 초과하고, 너무 적게 저장하면 맥락을 잃는다. Tool이 너무 많으면 LLM이 올바른 Tool을 선택하지 못하고, 너무 적으면 실행 능력이 제한된다. Control Logic이 복잡하면 디버깅이 어렵고, 단순하면 예외 상황에 대처하지 못한다. 이 균형을 잡는 것이 Agent 설계의 핵심 역량이다.
-
-다음 코드에서는 이 4요소를 LangGraph의 `TypedDict` State로 명시적으로 모델링하여, Agent의 동작을 투명하고 추적 가능하게 만드는 방법을 보여준다.
-
-### 예제
-
-```python
-from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage
-import operator
-
-
-class AgentState(TypedDict):
-    """Agent 4요소를 State로 모델링"""
-    # Goal: 사용자가 달성하고자 하는 목표
-    goal: str
-    # Memory: 대화 히스토리 (누적)
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-    # Tool: 사용 가능한 도구 목록
-    available_tools: list[str]
-    # Control Logic: 현재 단계와 반복 횟수
-    current_step: str
-    iteration_count: int
-    max_iterations: int
-
-
-# 초기 상태 예시
-initial_state: AgentState = {
-    "goal": "사용자 질문에 대해 정확한 답변 제공",
-    "messages": [],
-    "available_tools": ["search_db", "calculate", "web_search"],
-    "current_step": "plan",
-    "iteration_count": 0,
-    "max_iterations": 5,
-}
-
-print(f"Goal: {initial_state['goal']}")
-print(f"Available Tools: {initial_state['available_tools']}")
-print(f"Current Step: {initial_state['current_step']}")
-```
-
-**실행 결과:**
-```
-Goal: 사용자 질문에 대해 정확한 답변 제공
-Available Tools: ['search_db', 'calculate', 'web_search']
-Current Step: plan
-```
-
-### Q&A
-
-**Q: 왜 LLM만으로는 Agent가 아닌가요?**
-A: LLM은 단일 입출력 함수다. 목표를 설정하고, 중간 결과를 기억하며, 외부 도구를 사용하고, 다음 행동을 스스로 결정하는 제어 루프가 있어야 비로소 Agent라 할 수 있다. 핵심은 **자율적 의사결정 루프**의 존재 여부다.
-
-**Q: Memory는 단순 대화 히스토리와 어떻게 다른가요?**
-A: 대화 히스토리는 Memory의 한 부분이다. Agent Memory에는 대화 히스토리 외에도 작업 상태(어떤 step까지 완료했는지), Tool 호출 결과 캐시, 이전 판단의 근거 등이 포함된다. LangGraph에서는 이를 `State`에 명시적으로 모델링한다.
-
-<details>
-<summary>퀴즈: Agent 4요소 중 "다음에 어떤 Tool을 호출할지"를 결정하는 요소는?</summary>
-
-**힌트**: 조건 분기, 반복, 종료 조건 등을 담당하는 요소를 생각해보세요.
-
-**정답**: **Control Logic**. Goal이 방향을 제시하고, Memory가 맥락을 제공하며, Tool이 실행 수단이라면, Control Logic은 이 모든 정보를 종합하여 다음 행동을 결정하는 두뇌 역할을 한다.
-</details>
+<callout icon="📖" color="blue_bg">
+	**학습 목표**
+	1. Agent의 4요소(Goal, Memory, Tool, Control Logic)를 정의하고 분리할 수 있다
+	2. LangChain, LangGraph, Deep Agents에서 4요소가 어떻게 구현되는지 비교한다
+	3. 세 프레임워크의 계층 관계와 선택 기준을 이해한다
+	4. 요구사항에 따라 적합한 프레임워크를 판단할 수 있다
+</callout>
 
 ---
 
-## 2. Planner-Executor 구조 설계
+## 왜 중요한가
 
-### 개념 설명
+Agent를 "그냥 LLM + 툴"로 만들면 실패한다.
+유지보수가 불가능하고, 버그 위치를 찾을 수 없다.
+4요소 구조를 먼저 설계해야 확장 가능한 시스템이 된다.
 
-복잡한 작업을 처리하는 Agent는 **계획(Plan)과 실행(Execute)을 분리**하는 것이 효과적이다. 이것이 Planner-Executor 패턴이다.
+> **핵심 질문**: "이 Agent가 무엇을 기억하고, 어떻게 판단하며, 무엇을 실행하는가?"
 
-**이 패턴이 왜 필요한가?** 인간이 복잡한 프로젝트를 수행할 때를 생각해보자. "경쟁사 분석 보고서를 작성해라"라는 지시를 받으면, 우리는 바로 글을 쓰기 시작하지 않는다. 먼저 무엇을 조사해야 하는지 계획을 세우고, 각 조사 항목을 하나씩 실행하며, 중간 결과에 따라 계획을 수정한다. Agent도 마찬가지다. LLM에게 복잡한 요청을 한 번에 처리하라고 하면, context window 한계, 환각(hallucination), 누락 등의 문제가 빈번하게 발생한다. 계획과 실행을 분리하면 이 문제를 구조적으로 해결할 수 있다.
+Agent를 잘 설계한다는 것은 **목표-기억-도구-제어**를 분리하는 것이다.
+분리되지 않은 Agent는 요구사항 하나에도 전체가 흔들린다.
+프로덕션 Agent 장애의 대부분이 제어 흐름 미설계에서 비롯된다.
 
-Planner-Executor 패턴의 핵심 가치는 **관심사의 분리(Separation of Concerns)**에 있다. Planner는 "무엇을 해야 하는가"에 집중하고, Executor는 "어떻게 실행하는가"에 집중한다. 이 분리 덕분에 각각을 독립적으로 개선할 수 있다. 예를 들어, Planner의 계획 품질이 떨어지면 프롬프트를 개선하거나 더 강력한 모델을 사용하면 되고, Executor의 실행 속도가 느리면 병렬 처리를 도입하면 된다. 둘이 결합되어 있으면 어디를 고쳐야 하는지 파악하기 어렵다.
+---
 
-이 패턴에서 가장 중요한 것은 **피드백 루프(Re-planning)**다. 현실 세계에서 계획대로 일이 진행되는 경우는 드물다. DB에 예상한 데이터가 없거나, API 호출이 실패하거나, 중간 결과가 예상과 다를 수 있다. 이때 Executor의 실행 결과를 Planner에게 피드백하여 계획을 수정하는 메커니즘이 없으면, Agent는 잘못된 계획을 끝까지 수행하다가 의미 없는 결과를 생성한다. 반면 Re-planning이 잘 설계되면, Agent는 마치 숙련된 프로젝트 매니저처럼 상황 변화에 유연하게 대응할 수 있다.
+## 1. Agent 4요소 개요
 
-실무에서 이 패턴을 적용할 때 주의할 점이 있다. 첫째, Planner가 생성하는 sub-task의 granularity(세분화 수준)가 적절해야 한다. 너무 세분화하면 LLM 호출 비용이 증가하고, 너무 추상적이면 Executor가 실행할 수 없다. 둘째, Re-planning의 빈도를 조절해야 한다. 매 step마다 Re-planning을 하면 비용이 폭증하고, 전혀 하지 않으면 유연성을 잃는다. 일반적으로 "Executor가 실패하거나 예상 외 결과를 반환했을 때"만 Re-planning을 트리거하는 것이 실용적이다.
+### 왜 이것이 중요한가
+
+Agent 프레임워크마다 용어와 API가 다르다.
+하지만 모든 Agent는 동일한 4가지 요소로 구성된다.
+4요소를 먼저 이해하면 어떤 프레임워크든 빠르게 적용할 수 있다.
+
+### 핵심 원리
+
+| 요소 | 역할 | 핵심 질문 |
+|------|------|-----------|
+| **Goal** | 무엇을 달성해야 하는가 | "성공 조건은 무엇인가?" |
+| **Memory** | 무엇을 기억하는가 | "어떤 컨텍스트를 유지하는가?" |
+| **Tool** | 무엇을 할 수 있는가 | "어떤 외부 능력이 필요한가?" |
+| **Control Logic** | 어떻게 판단하는가 | "언제 멈추고, 언제 재시도하는가?" |
 
 ```
-+-----------+     +------------+     +-----------+
-|   User    |---->|  Planner   |---->| Executor  |
-|  Request  |     | (Sub-task  |     | (각 task  |
-|           |     |  분해)     |     |  실행)    |
-+-----------+     +------------+     +-----+-----+
-                       ^                    |
-                       |    결과 피드백      |
-                       +--------------------+
+┌─────────────────────────────────────────────┐
+│                   Agent                      │
+│                                              │
+│   ┌──────────┐          ┌──────────┐        │
+│   │   Goal   │          │  Memory  │        │
+│   │ "무엇을"  │          │ "기억을"  │        │
+│   └────┬─────┘          └────┬─────┘        │
+│        └──────┐   ┌─────────┘               │
+│               ▼   ▼                          │
+│         ┌─────────────┐                      │
+│         │Control Logic│                      │
+│         │  "어떻게"    │                      │
+│         └──────┬──────┘                      │
+│                ▼                              │
+│         ┌──────────┐                         │
+│         │   Tool   │                         │
+│         │ "행동을"  │                         │
+│         └──────────┘                         │
+└─────────────────────────────────────────────┘
 ```
 
-- **Planner**: 사용자 요청을 분석하여 실행 가능한 Sub-task 목록으로 분해
-- **Executor**: 각 Sub-task를 순차/병렬로 실행하고 결과를 Planner에 피드백
-- **피드백 루프**: 실행 결과를 바탕으로 계획을 수정 (Re-planning)
+### 실무에서의 의미
 
-다음 코드는 이 패턴을 LangGraph StateGraph로 구현한 예시다. Planner가 sub-task 목록을 생성하면 Executor가 순차적으로 실행하고, 모든 task가 완료되면 종료하는 흐름을 보여준다.
+4요소 분리는 유지보수와 테스트를 가능하게 한다.
+Goal만 바꾸면 같은 Tool 세트로 다른 작업을 수행한다.
+Control Logic만 바꾸면 같은 작업을 다른 전략으로 처리한다.
 
-### 예제
+### 주의사항과 흔한 오해
+
+> **오해 1**: "Tool이 많을수록 Agent가 강력하다"
+> Tool이 많으면 LLM이 잘못된 Tool을 선택할 확률이 높아진다. 필요한 최소한의 Tool만 제공하는 것이 핵심이다.
+
+> **오해 2**: "Control Logic은 LLM에게 맡기면 된다"
+> LLM은 판단을 돕지만, 최종 제어는 코드가 담당해야 한다. 무한 루프 방지, 최대 스텝 제한은 코드로 강제한다.
+
+---
+
+## 2. 프레임워크 소개
+
+### 왜 이것이 중요한가
+
+이 과정에서는 세 가지 프레임워크를 다룬다.
+각 프레임워크는 독립적이 아니라 **계층 구조**를 이룬다.
+아래 계층을 이해해야 위 계층을 제대로 활용할 수 있다.
+
+### 핵심 원리: 계층 구조
+
+```
+Deep Agents (최상위) ── 자동화 + 내장 도구 + 미들웨어
+    ↓ 내부적으로 사용
+LangGraph (오케스트레이션) ── 그래프 + 노드 + 엣지 + 상태 관리
+    ↓ 내부적으로 사용
+LangChain (기반) ── 모델 + 도구 + 프롬프트 + RAG
+```
+
+| 프레임워크 | 핵심 역할 | 비유 |
+|-----------|----------|------|
+| **LangChain** | LLM 호출과 Tool 정의 | 부품 (엔진, 바퀴) |
+| **LangGraph** | 실행 흐름 조립 | 설계도 (회로 다이어그램) |
+| **Deep Agents** | 완성된 에이전트 하네스 | 완성차 (운전만 하면 됨) |
+
+### 실무에서의 의미
+
+단순한 Tool 호출이면 LangChain만으로 충분하다.
+복잡한 분기와 상태 관리가 필요하면 LangGraph를 쓴다.
+파일 작업과 자율 계획이 필요하면 Deep Agents가 적합하다.
+
+### 다른 접근법과의 비교
+
+| 기준 | LangChain | LangGraph | Deep Agents |
+|------|-----------|-----------|-------------|
+| **복잡도** | 낮음 | 중간 | 높음 (자동화) |
+| **제어 수준** | ReAct 자동 | 노드 단위 | 미들웨어 기반 |
+| **상태 관리** | 메모리 | 체크포인터 | 백엔드 |
+| **멀티에이전트** | 핸드오프 | 서브그래프 | 서브에이전트 |
+| **파일 I/O** | 수동 | 수동 | 내장 |
+| **계획 수립** | 수동 | 수동 | `write_todos` 내장 |
+
+<callout icon="💡" color="gray_bg">
+	**실습 안내**: `labs/day2/00_basics/` 노트북에서 세 프레임워크를 직접 실행하며 비교한다.
+	`02_langchain_basics.ipynb` → `04_langgraph_basics.ipynb` → `05_deep_agents_basics.ipynb` 순서로 진행한다.
+</callout>
+
+---
+
+## 3. Goal — "무엇을 달성할 것인가"
+
+### 왜 이것이 중요한가
+
+Goal은 단순한 task description이 아니다.
+**성공 조건**과 **실패 조건**을 포함해야 한다.
+잘못 정의된 Goal은 무한 루프의 주요 원인이다.
+
+### 핵심 원리
 
 ```python
-from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langgraph.graph import StateGraph, END
-import operator
+# 나쁜 예: 목표가 모호함
+goal = "데이터를 분석해"
 
-
-class PlanExecuteState(TypedDict):
-    """Planner-Executor 패턴의 State"""
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-    plan: list[str]           # Planner가 생성한 sub-task 목록
-    current_task_index: int   # 현재 실행 중인 task 인덱스
-    results: list[str]        # 각 task의 실행 결과
-    is_complete: bool
-
-
-def planner_node(state: PlanExecuteState) -> dict:
-    """사용자 요청을 sub-task로 분해한다."""
-    user_message = state["messages"][-1].content
-
-    # 실제로는 LLM을 호출하여 계획을 생성한다
-    # 여기서는 데모를 위해 하드코딩
-    plan = [
-        "1단계: 사용자 의도 파악",
-        "2단계: 필요한 데이터 조회",
-        "3단계: 결과 종합 및 응답 생성",
-    ]
-    print(f"[Planner] 계획 수립 완료: {len(plan)}개 sub-task")
-    for task in plan:
-        print(f"  - {task}")
-
-    return {"plan": plan, "current_task_index": 0, "results": []}
-
-
-def executor_node(state: PlanExecuteState) -> dict:
-    """현재 sub-task를 실행한다."""
-    idx = state["current_task_index"]
-    task = state["plan"][idx]
-
-    # 실제로는 Tool 호출이나 LLM 추론을 수행한다
-    result = f"[완료] {task} -> 성공"
-    print(f"[Executor] {result}")
-
-    new_results = list(state["results"]) + [result]
-    return {
-        "results": new_results,
-        "current_task_index": idx + 1,
-    }
-
-
-def should_continue(state: PlanExecuteState) -> str:
-    """모든 task가 완료되었는지 확인한다."""
-    if state["current_task_index"] >= len(state["plan"]):
-        return "complete"
-    return "continue"
-
-
-def finish_node(state: PlanExecuteState) -> dict:
-    """최종 결과를 정리한다."""
-    summary = "\n".join(state["results"])
-    print(f"\n[Finish] 모든 작업 완료:\n{summary}")
-    return {
-        "is_complete": True,
-        "messages": [AIMessage(content=f"작업 완료:\n{summary}")],
-    }
-
-
-# 그래프 구성
-workflow = StateGraph(PlanExecuteState)
-workflow.add_node("planner", planner_node)
-workflow.add_node("executor", executor_node)
-workflow.add_node("finish", finish_node)
-
-workflow.set_entry_point("planner")
-workflow.add_edge("planner", "executor")
-workflow.add_conditional_edges(
-    "executor",
-    should_continue,
-    {"continue": "executor", "complete": "finish"},
+# 좋은 예: 조건이 명확함
+goal = Goal(
+    description="판매 데이터에서 이상치를 탐지한다",
+    success_condition="이상치 목록과 근거 보고서 생성 완료",
+    abort_condition="데이터 접근 실패 또는 3회 재시도 초과",
+    max_steps=10
 )
-workflow.add_edge("finish", END)
-
-app = workflow.compile()
-
-# 실행
-result = app.invoke({
-    "messages": [HumanMessage(content="최근 매출 데이터를 분석해줘")],
-    "plan": [],
-    "current_task_index": 0,
-    "results": [],
-    "is_complete": False,
-})
 ```
 
-**실행 결과:**
-```
-[Planner] 계획 수립 완료: 3개 sub-task
-  - 1단계: 사용자 의도 파악
-  - 2단계: 필요한 데이터 조회
-  - 3단계: 결과 종합 및 응답 생성
-[Executor] [완료] 1단계: 사용자 의도 파악 -> 성공
-[Executor] [완료] 2단계: 필요한 데이터 조회 -> 성공
-[Executor] [완료] 3단계: 결과 종합 및 응답 생성 -> 성공
+### 프레임워크별 Goal 구현
 
-[Finish] 모든 작업 완료:
-[완료] 1단계: 사용자 의도 파악 -> 성공
-[완료] 2단계: 필요한 데이터 조회 -> 성공
-[완료] 3단계: 결과 종합 및 응답 생성 -> 성공
-```
-
-### Q&A
-
-**Q: 모든 Agent에 Planner-Executor 패턴이 필요한가요?**
-A: 아니다. 단순한 Q&A Agent나 단일 Tool만 호출하는 Agent에는 오히려 과잉 설계다. 이 패턴은 **복수의 단계를 순차적으로 실행해야 하거나**, **중간 실패 시 계획을 수정해야 하는** 복잡한 시나리오에 적합하다.
-
-<details>
-<summary>퀴즈: Planner-Executor 패턴에서 Re-planning이 필요한 상황은?</summary>
-
-**힌트**: Executor가 특정 sub-task를 실행했을 때, 예상과 다른 결과가 나오면 어떻게 해야 할까요?
-
-**정답**: Executor의 실행 결과가 예상과 다르거나, Tool 호출이 실패하거나, 새로운 정보가 발견되어 기존 계획이 유효하지 않을 때 Re-planning이 필요하다. 예: DB 조회 결과 데이터가 없어서 외부 API로 전환해야 하는 경우.
-</details>
-
----
-
-## 3. Sub-task 분해 전략
-
-### 개념 설명
-
-효과적인 Agent는 복잡한 요청을 **실행 가능한 단위(Sub-task)**로 분해한다. 분해 품질이 Agent 성능을 좌우한다.
-
-**왜 Sub-task 분해가 중요한가?** LLM의 가장 큰 한계 중 하나는 "한 번에 처리할 수 있는 복잡도의 상한"이다. 연구에 따르면 LLM은 단일 프롬프트로 3~4단계 이상의 추론 체인을 안정적으로 수행하기 어렵다. 복잡한 작업을 작은 단위로 분해하면, 각 단계에서 LLM이 집중해야 할 범위가 줄어들어 정확도가 크게 향상된다. 이것은 인간이 복잡한 수학 문제를 풀 때 한 번에 답을 구하지 않고 중간 단계를 나눠 푸는 것과 같은 원리다.
-
-Sub-task 분해에는 세 가지 핵심 전략이 있으며, 작업의 특성에 따라 적절한 전략을 선택해야 한다. **순차 분해**는 이전 단계의 출력이 다음 단계의 입력이 되는 파이프라인 형태로, 데이터 처리나 문서 작성 같은 작업에 적합하다. **병렬 분해**는 독립적인 작업들을 동시에 수행하여 전체 실행 시간을 단축하는 전략으로, 여러 소스에서 데이터를 수집하는 작업에 효과적이다. **계층적 분해**는 큰 작업을 하위 작업으로 재귀적으로 분해하는 방식으로, 복잡도가 매우 높은 프로젝트에 사용한다.
-
-실무에서 분해 품질을 결정짓는 핵심 요소는 **의존성 그래프**다. 각 sub-task 간의 의존 관계를 명확히 파악해야 어떤 task를 병렬로 실행할 수 있고, 어떤 순서로 실행해야 하는지 결정할 수 있다. 의존성을 잘못 파악하면 불필요하게 순차 실행하여 시간을 낭비하거나, 필요한 데이터 없이 실행하여 오류가 발생한다. 또한 sub-task의 적정 개수는 **3~7개**가 경험적으로 좋다. 이 범위를 벗어나면 관리 복잡도가 증가하거나 분해가 불충분해진다.
-
-**분해 전략 3가지:**
-
-| 전략 | 설명 | 적합한 상황 |
-|------|------|------------|
-| **순차 분해** | 단계별로 의존성 있는 task 나열 | 이전 결과가 다음 입력이 되는 경우 |
-| **병렬 분해** | 독립적인 task를 동시 실행 | 서로 의존하지 않는 작업들 |
-| **계층적 분해** | 큰 task를 하위 task로 재귀 분해 | 복잡도가 매우 높은 작업 |
-
-다음 코드는 "경쟁사 분석 보고서 작성"이라는 복잡한 요청을 Sub-task로 분해하고, 각 task의 의존 관계와 실행 전략을 명시적으로 모델링하는 예시다.
+| | LangChain | LangGraph | Deep Agents |
+|--|-----------|-----------|-------------|
+| **방식** | `SystemMessage` | `SystemMessage` | `system_prompt` + `AGENTS.md` |
+| **주입** | 메시지 리스트 첫 번째 | 노드 내 직접 삽입 | 자동 주입 |
+| **확장** | — | — | `memory` 파라미터로 규칙 문서 로드 |
 
 ```python
-from typing import TypedDict, Literal
-from dataclasses import dataclass
+# LangChain / LangGraph
+messages = [
+    SystemMessage(content="판매 데이터에서 이상치를 탐지한다."),
+    HumanMessage(content="2024년 3분기 데이터를 분석해줘"),
+]
 
-
-@dataclass
-class SubTask:
-    """실행 가능한 단위 작업"""
-    id: str
-    description: str
-    tool_needed: str | None
-    depends_on: list[str]  # 의존하는 task ID 목록
-    strategy: Literal["sequential", "parallel", "hierarchical"]
-
-
-def decompose_request(request: str) -> list[SubTask]:
-    """사용자 요청을 Sub-task로 분해한다.
-
-    실제 구현에서는 LLM을 호출하여 분해한다.
-    여기서는 "경쟁사 분석 보고서 작성" 요청을 예시로 보여준다.
-    """
-    tasks = [
-        SubTask(
-            id="t1",
-            description="경쟁사 목록 조회",
-            tool_needed="db_query",
-            depends_on=[],
-            strategy="sequential",
-        ),
-        SubTask(
-            id="t2a",
-            description="경쟁사 A 매출 데이터 수집",
-            tool_needed="web_search",
-            depends_on=["t1"],
-            strategy="parallel",
-        ),
-        SubTask(
-            id="t2b",
-            description="경쟁사 B 매출 데이터 수집",
-            tool_needed="web_search",
-            depends_on=["t1"],
-            strategy="parallel",
-        ),
-        SubTask(
-            id="t3",
-            description="수집 데이터 비교 분석",
-            tool_needed=None,  # LLM 추론만 사용
-            depends_on=["t2a", "t2b"],
-            strategy="sequential",
-        ),
-        SubTask(
-            id="t4",
-            description="보고서 생성",
-            tool_needed="file_write",
-            depends_on=["t3"],
-            strategy="sequential",
-        ),
-    ]
-    return tasks
-
-
-# 분해 결과 시각화
-tasks = decompose_request("경쟁사 분석 보고서 작성")
-print("=== Sub-task 분해 결과 ===")
-for task in tasks:
-    deps = ", ".join(task.depends_on) if task.depends_on else "없음"
-    tool = task.tool_needed or "LLM 추론"
-    print(f"[{task.id}] {task.description}")
-    print(f"     전략: {task.strategy} | 도구: {tool} | 의존: {deps}")
-```
-
-**실행 결과:**
-```
-=== Sub-task 분해 결과 ===
-[t1] 경쟁사 목록 조회
-     전략: sequential | 도구: db_query | 의존: 없음
-[t2a] 경쟁사 A 매출 데이터 수집
-     전략: parallel | 도구: web_search | 의존: t1
-[t2b] 경쟁사 B 매출 데이터 수집
-     전략: parallel | 도구: web_search | 의존: t1
-[t3] 수집 데이터 비교 분석
-     전략: sequential | 도구: LLM 추론 | 의존: t2a, t2b
-[t4] 보고서 생성
-     전략: sequential | 도구: file_write | 의존: t3
-```
-
-### Q&A
-
-**Q: Sub-task를 너무 잘게 쪼개면 문제가 되나요?**
-A: 그렇다. 과도한 분해는 LLM 호출 횟수를 증가시키고, 각 단계에서 context loss가 발생할 수 있다. 경험적으로 **3~7개 sub-task**가 적정하며, 단일 Tool 호출로 완료되는 수준이 이상적이다.
-
-<details>
-<summary>퀴즈: t2a와 t2b를 병렬로 실행할 수 있는 이유는?</summary>
-
-**힌트**: 두 task의 `depends_on` 필드를 확인해보세요. 서로를 참조하고 있나요?
-
-**정답**: t2a와 t2b는 모두 t1에만 의존하고, 서로에 대한 의존성이 없다. 따라서 t1 완료 후 두 task를 동시에 실행할 수 있다. 이것이 병렬 분해의 핵심 조건: **상호 의존성이 없는 task**.
-</details>
-
----
-
-## 4. Single-step vs Multi-step Agent 판단
-
-### 개념 설명
-
-Agent를 설계할 때 가장 먼저 결정해야 할 것은 **Single-step인가 Multi-step인가**이다.
-
-**이 판단이 왜 중요한가?** Agent 개발에서 가장 흔한 실수는 두 가지 극단이다. 하나는 단순한 작업에 Multi-step Agent를 적용하여 불필요한 복잡성과 비용을 초래하는 것이고, 다른 하나는 복잡한 작업에 Single-step Agent를 고집하여 품질 저하와 실패를 겪는 것이다. 올바른 판단을 내리려면 "작업의 본질적 복잡도"를 정확히 파악해야 한다.
-
-Single-step Agent는 **한 번의 LLM 호출과 0~1회의 Tool 호출**로 완료되는 단순한 구조다. "오늘 서울 날씨 알려줘"라는 요청은 날씨 API를 한 번 호출하고 결과를 정리하면 끝이다. 이런 작업에 Planner-Executor 패턴을 적용하면 오히려 응답 시간이 느려지고 비용만 증가한다. 반면 Multi-step Agent는 **여러 번의 LLM 호출과 Tool 호출**이 필요하며, 이전 단계의 결과에 따라 다음 행동이 달라지는 구조다. "AI Agent 시장을 분석하고 경쟁사 비교 보고서를 작성해줘"라는 요청은 검색, 데이터 수집, 분석, 보고서 작성이라는 여러 단계를 거쳐야 하며, 중간에 수집된 데이터에 따라 추가 검색이 필요할 수도 있다.
-
-실무에서 권장하는 접근법은 **"Single-step 우선 원칙"**이다. 먼저 Single-step으로 구현하고, 다음 세 가지 신호가 나타나면 Multi-step으로 전환한다. (1) Tool 호출 결과에 따라 다른 Tool을 호출해야 하는 경우, (2) 한 번의 응답으로 사용자 요구를 충족할 수 없는 경우, (3) 중간 실패에 대한 대체 경로(Fallback)가 필요한 경우. 이 점진적 접근법은 YAGNI(You Aren't Gonna Need It) 원칙과도 부합한다. 처음부터 Multi-step으로 설계하면, 실제로는 필요하지 않은 복잡성을 도입하게 되는 경우가 많다.
-
-| 구분 | Single-step Agent | Multi-step Agent |
-|------|-------------------|------------------|
-| **구조** | LLM 1회 호출 + Tool 0~1회 | LLM 여러 회 호출 + Tool 여러 회 |
-| **제어 흐름** | 직선형 (Linear) | 루프/분기 (Graph) |
-| **State 관리** | 불필요 또는 최소 | 필수 (State 누적) |
-| **적합한 작업** | FAQ 응답, 단순 계산, 단일 조회 | 리서치, 데이터 분석, 복합 워크플로우 |
-| **구현 복잡도** | 낮음 | 높음 |
-| **실패 처리** | 단순 재시도 | Fallback, Re-planning |
-
-**판단 기준 플로우차트:**
-
-```
-사용자 요청 도착
-     |
-     v
-Tool 호출이 필요한가? --No--> 단순 LLM 응답 (Agent 불필요)
-     | Yes
-     v
-Tool 호출이 1회로 충분한가? --Yes--> Single-step Agent
-     | No
-     v
-이전 결과에 따라 다음 행동이 달라지는가? --No--> 병렬 Single-step
-     | Yes
-     v
-Multi-step Agent
-```
-
-두 구조의 차이를 직접 비교해보자. 아래 코드에서 Single-step Agent는 단일 노드로 즉시 결과를 반환하고, Multi-step Agent는 수집-평가-종합이라는 루프를 반복하며 충분한 데이터가 모일 때까지 작업을 계속한다.
-
-### 예제
-
-```python
-from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langgraph.graph import StateGraph, END
-import operator
-
-
-# === Single-step Agent 예시 ===
-class SingleStepState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-    result: str
-
-
-def single_step_agent(state: SingleStepState) -> dict:
-    """단일 단계로 완료하는 Agent. Tool 1회 호출로 끝."""
-    query = state["messages"][-1].content
-
-    # Tool 호출 (단순 조회)
-    result = f"'{query}'에 대한 답변: 42도입니다."  # 실제로는 Tool 호출
-    print(f"[Single-step] 입력: {query}")
-    print(f"[Single-step] 결과: {result}")
-    return {
-        "result": result,
-        "messages": [AIMessage(content=result)],
-    }
-
-
-single_workflow = StateGraph(SingleStepState)
-single_workflow.add_node("agent", single_step_agent)
-single_workflow.set_entry_point("agent")
-single_workflow.add_edge("agent", END)
-single_app = single_workflow.compile()
-
-
-# === Multi-step Agent 예시 ===
-class MultiStepState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-    step: str
-    data_collected: list[str]
-    iteration: int
-
-
-def research_node(state: MultiStepState) -> dict:
-    """정보 수집 단계"""
-    iteration = state["iteration"]
-    new_data = f"데이터_{iteration}: 관련 정보 발견"
-    collected = list(state.get("data_collected", [])) + [new_data]
-    print(f"[Multi-step] 수집 #{iteration}: {new_data}")
-    return {
-        "data_collected": collected,
-        "iteration": iteration + 1,
-        "step": "evaluate",
-    }
-
-
-def evaluate_node(state: MultiStepState) -> dict:
-    """수집 결과 평가 -- 충분한지 판단"""
-    count = len(state["data_collected"])
-    print(f"[Multi-step] 평가: {count}개 데이터 수집됨")
-    return {"step": "evaluate"}
-
-
-def synthesize_node(state: MultiStepState) -> dict:
-    """최종 답변 생성"""
-    data = state["data_collected"]
-    answer = f"총 {len(data)}개 데이터를 기반으로 종합 분석 완료"
-    print(f"[Multi-step] 종합: {answer}")
-    return {
-        "messages": [AIMessage(content=answer)],
-        "step": "done",
-    }
-
-
-def need_more_data(state: MultiStepState) -> str:
-    """데이터가 충분한지 판단"""
-    if len(state["data_collected"]) < 3:
-        return "need_more"
-    return "sufficient"
-
-
-multi_workflow = StateGraph(MultiStepState)
-multi_workflow.add_node("research", research_node)
-multi_workflow.add_node("evaluate", evaluate_node)
-multi_workflow.add_node("synthesize", synthesize_node)
-
-multi_workflow.set_entry_point("research")
-multi_workflow.add_edge("research", "evaluate")
-multi_workflow.add_conditional_edges(
-    "evaluate",
-    need_more_data,
-    {"need_more": "research", "sufficient": "synthesize"},
+# Deep Agents — system_prompt + AGENTS.md
+agent = create_deep_agent(
+    model=model,
+    system_prompt="판매 데이터에서 이상치를 탐지한다.",
+    memory=["/project/AGENTS.md"],  # 영구 규칙 자동 주입
 )
-multi_workflow.add_edge("synthesize", END)
-multi_app = multi_workflow.compile()
-
-# 실행 비교
-print("=== Single-step Agent ===")
-single_app.invoke({
-    "messages": [HumanMessage(content="오늘 서울 기온")],
-    "result": "",
-})
-
-print("\n=== Multi-step Agent ===")
-multi_app.invoke({
-    "messages": [HumanMessage(content="AI Agent 시장 분석")],
-    "step": "research",
-    "data_collected": [],
-    "iteration": 1,
-})
 ```
 
-**실행 결과:**
+<callout icon="💡" color="gray_bg">
+	Deep Agents의 `AGENTS.md`는 Claude Code의 `CLAUDE.md`와 동일한 패턴이다.
+	Goal이 코드가 아닌 **문서로 관리**되어 비개발자도 수정할 수 있다.
+</callout>
+
+### 주의사항과 흔한 오해
+
+> **오해**: "Goal을 자세하게 쓸수록 좋다"
+> 너무 긴 Goal은 LLM의 주의를 분산시킨다. 핵심 조건만 명확히 기술한다.
+
+---
+
+## 4. Memory — "무엇을 기억하는가"
+
+### 왜 이것이 중요한가
+
+Agent가 판단하려면 과거 정보가 필요하다.
+하지만 모든 것을 기억하면 컨텍스트가 폭발한다.
+**무엇을, 얼마나, 어디에** 기억할지 설계하는 것이 핵심이다.
+
+### 핵심 원리: 4가지 메모리 레이어
+
 ```
-=== Single-step Agent ===
-[Single-step] 입력: 오늘 서울 기온
-[Single-step] 결과: '오늘 서울 기온'에 대한 답변: 42도입니다.
-
-=== Multi-step Agent ===
-[Multi-step] 수집 #1: 데이터_1: 관련 정보 발견
-[Multi-step] 평가: 1개 데이터 수집됨
-[Multi-step] 수집 #2: 데이터_2: 관련 정보 발견
-[Multi-step] 평가: 2개 데이터 수집됨
-[Multi-step] 수집 #3: 데이터_3: 관련 정보 발견
-[Multi-step] 평가: 3개 데이터 수집됨
-[Multi-step] 종합: 총 3개 데이터를 기반으로 종합 분석 완료
+┌─────────────────────────────────────┐
+│ Episodic Memory  (이번 대화/세션)    │ ← 가장 빠름, 가장 휘발성
+├─────────────────────────────────────┤
+│ Working Memory   (현재 Task 상태)   │ ← Agent State에 보관
+├─────────────────────────────────────┤
+│ Semantic Memory  (도메인 지식)      │ ← Vector DB, RAG
+├─────────────────────────────────────┤
+│ Procedural Memory (실행 패턴)       │ ← 프롬프트, Few-shot
+└─────────────────────────────────────┘
 ```
 
-### Q&A
+**Working Memory**가 핵심이다.
+Agent State에 무엇을 담을지 결정하는 것이 설계의 핵심이다.
+너무 많으면 컨텍스트가 오염되고, 너무 적으면 판단이 틀린다.
 
-**Q: Single-step으로 시작했다가 Multi-step으로 전환해야 할 때는?**
-A: 프로젝트 초기에는 Single-step으로 시작하는 것을 권장한다. 다음 신호가 나타나면 Multi-step으로 전환을 고려한다: (1) Tool 호출 결과에 따라 다른 Tool을 호출해야 하는 경우, (2) 한 번의 응답으로 사용자 요구를 충족할 수 없는 경우, (3) 중간 실패에 대한 대체 경로가 필요한 경우.
+### 프레임워크별 Memory 구현
+
+| | LangChain | LangGraph | Deep Agents |
+|--|-----------|-----------|-------------|
+| **단기 기억** | `InMemorySaver` + `thread_id` | 동일 | 동일 (내부적으로 LangGraph) |
+| **장기 기억** | `InMemoryStore` + 수동 도구 | 동일 | `CompositeBackend` 자동 라우팅 |
+| **프로덕션** | 직접 구현 | `PostgresStore` 플러그인 | `StoreBackend` (Redis/PG) |
+
+```python
+# LangChain / LangGraph — 단기 기억
+from langgraph.checkpoint.memory import InMemorySaver
+checkpointer = InMemorySaver()
+config = {"configurable": {"thread_id": "session-1"}}
+
+# Deep Agents — 경로 기반 자동 라우팅
+agent = create_deep_agent(
+    model=model,
+    backend=lambda rt: CompositeBackend(
+        default=StateBackend(rt),               # / → 임시
+        routes={"/memories/": StoreBackend(rt)}, # /memories/ → 영속
+    ),
+)
+# /memories/에 쓰면 → 장기 저장 (자동)
+# /scratch.txt에 쓰면 → 스레드 종료 시 소멸
+```
+
+<callout icon="💡" color="gray_bg">
+	Deep Agents는 에이전트가 **파일 경로만으로** 단기/장기 기억을 구분한다.
+	별도 메모리 도구를 만들 필요가 없다.
+</callout>
+
+### 주의사항과 흔한 오해
+
+> **오해**: "전체 대화 히스토리를 유지해야 정확하다"
+> Working Memory에 전체 히스토리를 담으면 비용이 급증한다. 최근 5~10개 관찰만 유지하고, 오래된 것은 요약하거나 외부 저장소로 이동한다.
+
+---
+
+## 5. Tool — "어떤 행동을 할 수 있는가"
+
+### 왜 이것이 중요한가
+
+Tool은 Agent가 외부 세계와 상호작용하는 유일한 수단이다.
+잘 설계된 Tool은 재사용이 가능하고, 독립 테스트가 쉽다.
+Tool은 **원자적(atomic)**이어야 한다.
+
+### 핵심 원리
+
+하나의 Tool은 하나의 명확한 역할만 수행한다.
+
+```python
+# 나쁜 예: Tool이 너무 많은 일을 함
+def search_and_summarize(query: str) -> str:
+    results = web_search(query)
+    summary = llm_summarize(results)
+    save_to_db(summary)
+    return summary
+
+# 좋은 예: 각 Tool은 하나의 역할
+@tool
+def web_search(query: str) -> list[str]: ...
+
+@tool
+def summarize_text(text: str) -> str: ...
+
+@tool
+def save_result(key: str, value: str) -> bool: ...
+```
+
+### 프레임워크별 Tool 구현
+
+| | LangChain | LangGraph | Deep Agents |
+|--|-----------|-----------|-------------|
+| **커스텀 도구** | `@tool` 데코레이터 | 동일 | 동일 |
+| **모델 바인딩** | `create_react_agent(tools=)` | `model.bind_tools()` | `create_deep_agent(tools=)` |
+| **파일 I/O** | 직접 구현 | 직접 구현 | **내장** 6종 |
+| **계획 수립** | 직접 구현 | 직접 구현 | **내장** `write_todos` |
+| **서브에이전트** | 직접 구현 | 서브그래프 | **내장** `task` |
+
+```python
+# LangChain / LangGraph — 모든 도구를 직접 정의
+@tool
+def read_file(path: str) -> str:
+    """파일 읽기"""
+    with open(path) as f:
+        return f.read()
+
+agent = create_react_agent(model, tools=[read_file])
+
+# Deep Agents — 파일 도구 6종이 기본 포함
+agent = create_deep_agent(model=model, tools=[my_tool])
+# 자동 포함: ls, read_file, write_file, edit_file,
+#           glob, grep, write_todos, task
+```
+
+### 주의사항과 흔한 오해
+
+> **오해**: "Tool A의 출력을 Tool B에 직접 전달하면 효율적이다"
+> Tool 간 직접 연결은 테스트와 디버깅을 불가능하게 만든다. 반드시 Agent State를 통해 중계한다.
+
+---
+
+## 6. Control Logic — "어떻게 판단하고 반복하는가"
+
+### 왜 이것이 중요한가
+
+Control Logic은 4요소 중 **프레임워크 간 차이가 가장 크다.**
+ReAct 자동 루프, 그래프 명시적 제어, 미들웨어 파이프라인.
+어떤 패턴을 선택하느냐가 Agent의 확장성을 결정한다.
+
+### 핵심 원리
+
+기본 제어 루프는 **Plan → Execute → Observe → Reflect**이다.
+
+```python
+class AgentControlLoop:
+    def run(self, goal: Goal) -> Result:
+        state = AgentState(goal=goal)
+
+        while not state.is_terminal():
+            action = self.planner.plan(state)       # Plan
+            observation = self.executor.execute(action) # Execute
+            state = self.reflector.update(state, observation) # Reflect
+
+            if state.steps >= goal.max_steps:       # Safety
+                return state.abort("Max steps exceeded")
+
+        return state.result
+```
+
+### 프레임워크별 Control Logic 구현
+
+**LangChain — ReAct 자동 루프**
+
+```
+User → LLM → tool_calls? → 도구 실행 → LLM → 반복
+                  없으면? → 최종 응답 → END
+```
+
+```python
+from langchain.chat_models import init_chat_model
+from langgraph.prebuilt import create_react_agent
+
+agent = create_react_agent(model, tools)
+agent.invoke({"messages": [...]})  # 내부 루프 자동
+```
+
+**LangGraph — 그래프 기반 명시적 제어**
+
+```
+START → llm_node → [조건부] → tool_node → llm_node → END
+```
+
+```python
+builder = StateGraph(MessagesState)
+builder.add_node("llm", llm_call)
+builder.add_node("tools", tool_node)
+builder.add_edge(START, "llm")
+builder.add_conditional_edges(
+    "llm", should_continue,
+    {"tools": "tools", END: END},
+)
+builder.add_edge("tools", "llm")
+graph = builder.compile()
+```
+
+**Deep Agents — 미들웨어 파이프라인**
+
+```
+User → [TodoList → Memory → Skills → Filesystem
+        → SubAgent → HITL] → LLM → 도구 실행 → 반복
+```
+
+```python
+agent = create_deep_agent(
+    model=model,
+    interrupt_on={"execute": True},  # 위험한 도구는 승인 필요
+)
+```
+
+### 다른 접근법과의 비교
+
+| | LangChain | LangGraph | Deep Agents |
+|--|-----------|-----------|-------------|
+| **패턴** | ReAct (자동) | Graph (명시적) | Middleware (자동+확장) |
+| **제어 수준** | 블랙박스 | 노드/엣지 단위 | 미들웨어 인터셉트 |
+| **분기/조건** | LLM 판단 위임 | `conditional_edge` | 미들웨어 + LLM |
+| **사람 개입** | — | `interrupt()` | `interrupt_on` |
+
+### 주의사항과 흔한 오해
+
+> **오해**: "제어 흐름에 비즈니스 로직을 넣어도 된다"
+> 제어(언제 실행하는가)와 비즈니스(무엇을 하는가)를 분리한다. 섞이면 수정 시 전체 흐름이 영향을 받는다.
+
+---
+
+## 7. 종합 비교
+
+### 4요소 × 3프레임워크 매트릭스
+
+| 요소 | LangChain | LangGraph | Deep Agents |
+|------|-----------|-----------|-------------|
+| **Goal** | `SystemMessage` | `SystemMessage` | `system_prompt` + `AGENTS.md` |
+| **Memory** | 체크포인터 + 수동 Store | 체크포인터 + Store | 체크포인터 + `CompositeBackend` 자동 라우팅 |
+| **Tool** | `@tool` 직접 정의 | `@tool` + `bind_tools` | `@tool` + **내장 도구 8종** |
+| **Control** | ReAct (블랙박스) | Graph (명시적 노드/엣지) | Middleware (자동+확장 가능) |
+
+### 선택 기준
+
+- **LangChain**: 단일 에이전트, 간단한 Tool 호출, RAG
+- **LangGraph**: 복잡한 워크플로, 조건부 분기, 사람 개입
+- **Deep Agents**: 파일 기반 작업, 자율 계획, 서브에이전트
+
+> **기억할 것**: 세 프레임워크는 경쟁이 아니라 **계층 구조**다. Deep Agents는 LangGraph 위에서, LangGraph는 LangChain 위에서 동작한다.
+
+---
+
+## 비교: Single-step vs Multi-step Agent
+
+| 기준 | Single-step | Multi-step |
+|------|------------|------------|
+| **판단 횟수** | 1회 | 여러 번 반복 |
+| **상태 관리** | 불필요 | 필수 |
+| **복잡도** | 낮음 | 높음 |
+| **적합한 Task** | 분류, 요약, 변환 | 조사, 계획, 자동화 |
+| **실패 복구** | 불가 | 재시도 가능 |
+
+> **판단 기준**: "LLM 한 번 호출로 완료되는가?" → Yes면 Single-step
+
+---
+
+## Q&A
+
+**Q1. Planner와 Executor를 반드시 분리해야 하나요?**
+
+단순한 Agent는 통합해도 됩니다.
+하지만 3단계 이상 Multi-step이면 분리를 권장합니다.
+분리하면 Planner만 교체해서 전략을 바꿀 수 있습니다.
+
+**Q2. Working Memory의 적절한 크기는?**
+
+일반적으로 최근 5~10개의 관찰을 유지합니다.
+오래된 것은 요약해서 보관합니다.
+LLM 컨텍스트 창의 20% 이내가 실무 기준입니다.
+
+**Q3. LangChain만으로 충분한 경우는 언제인가요?**
+
+Tool 2~3개, 단일 분기, 상태 불필요한 경우입니다.
+`create_react_agent()`가 내부 루프를 자동 처리합니다.
+분기가 복잡해지면 LangGraph로 전환합니다.
+
+**Q4. Deep Agents의 내장 도구를 끄고 싶으면?**
+
+`create_deep_agent()`에서 미들웨어를 선택적으로 제거합니다.
+`FilesystemMiddleware`를 빼면 파일 도구가 비활성화됩니다.
+필요한 미들웨어만 명시적으로 지정할 수 있습니다.
+
+**Q5. 프레임워크를 혼합해서 쓸 수 있나요?**
+
+가능합니다. Deep Agents 내부에서 LangChain 도구를 사용합니다.
+LangGraph 그래프도 Deep Agents에 통합할 수 있습니다.
+계층 구조이므로 아래 계층 API를 자유롭게 호출합니다.
+
+---
+
+## 퀴즈
+
+**Q1.** Agent의 4요소 중 "언제 멈추고 언제 재시도할지 결정하는" 요소는?
 
 <details>
-<summary>퀴즈: 다음 중 Multi-step Agent가 필요한 시나리오는?</summary>
+<summary>💡 힌트</summary>
+	Plan → Execute → Observe 사이클을 관장하는 요소입니다.
+</details>
 
-**(a)** 현재 환율을 조회하여 알려주기
-**(b)** 여러 뉴스 소스를 검색하고, 요약하고, 신뢰도를 평가하여 보고서 작성
-**(c)** 사용자가 입력한 텍스트를 영어로 번역
+<details>
+<summary>✅ 정답</summary>
+	**Control Logic**
+	**설명:** Control Logic은 판단 흐름 전체를 담당한다. Goal 달성 여부를 평가하고, 다음 행동을 결정하며, 실패 시 재시도나 중단을 처리한다.
+</details>
 
-**힌트**: 어떤 작업이 여러 단계의 Tool 호출과 중간 판단을 필요로 하나요?
+---
 
-**정답**: **(b)**. 뉴스 검색(Tool) -> 요약(LLM) -> 신뢰도 평가(LLM + Tool) -> 보고서 작성(Tool)으로 다단계 실행과 중간 결과 기반 판단이 필요하다. (a)와 (c)는 단일 Tool 호출 또는 단일 LLM 호출로 충분하므로 Single-step이 적합하다.
+**Q2.** 다음 중 Single-step Agent가 적합한 경우는?
+
+- A) 여러 사이트를 방문해 정보를 수집하는 경우
+- B) 텍스트를 한국어로 번역하는 경우
+- C) 에러 로그를 분석하고 자동으로 PR을 올리는 경우
+- D) 코드베이스 전체를 리팩토링하는 경우
+
+<details>
+<summary>💡 힌트</summary>
+	LLM 한 번의 호출로 완료될 수 있는 작업을 찾으세요.
+</details>
+
+<details>
+<summary>✅ 정답</summary>
+	**B**
+	**설명:** 번역은 입력 → 출력이 한 번의 LLM 호출로 충분하다. A, C, D는 모두 여러 단계와 외부 정보가 필요한 Multi-step 작업이다.
+</details>
+
+---
+
+**Q3.** Deep Agents에서 `backend` 파라미터를 생략하면 어떤 일이 발생하는가?
+
+- A) 로컬 디스크에 파일을 저장한다
+- B) 에러가 발생한다
+- C) StateBackend가 적용되어 빈 가상 파일시스템이 된다
+- D) StoreBackend가 적용되어 Redis에 저장한다
+
+<details>
+<summary>💡 힌트</summary>
+	기본 백엔드는 에페메럴(ephemeral)입니다.
+</details>
+
+<details>
+<summary>✅ 정답</summary>
+	**C**
+	**설명:** `StateBackend`가 기본값이다. 파일을 에이전트 메모리(LangGraph state)에만 저장하므로, 실제 디스크와 완전히 분리된 빈 파일시스템처럼 보인다. 스레드 종료 시 소멸한다.
+</details>
+
+---
+
+**Q4.** 세 프레임워크의 계층 관계로 올바른 것은?
+
+- A) LangChain → Deep Agents → LangGraph
+- B) Deep Agents → LangGraph → LangChain
+- C) LangGraph → LangChain → Deep Agents
+- D) 세 프레임워크는 독립적이다
+
+<details>
+<summary>💡 힌트</summary>
+	"위 계층이 아래 계층을 내부적으로 사용한다"는 관계입니다.
+</details>
+
+<details>
+<summary>✅ 정답</summary>
+	**B**
+	**설명:** Deep Agents는 LangGraph 위에서, LangGraph는 LangChain 위에서 동작한다. `create_deep_agent()`의 반환 타입은 LangGraph의 `CompiledStateGraph`이다.
+</details>
+
+---
+
+**Q5.** Tool 설계 원칙 중 "원자적(atomic)"이란 무엇을 의미하는가?
+
+<details>
+<summary>💡 힌트</summary>
+	데이터베이스 트랜잭션의 원자성과 유사한 개념입니다.
+</details>
+
+<details>
+<summary>✅ 정답</summary>
+	**하나의 Tool은 하나의 명확한 역할만 수행한다**
+	**설명:** Tool이 원자적이면 독립 테스트가 가능하고 결합이 유연하다. 검색 + 요약 + 저장을 한 Tool에 넣으면 각 단계의 오류를 구분할 수 없다.
 </details>
 
 ---
 
 ## 실습
 
-### 실습 1: Agent 4요소 State 모델링
-- **연관 학습 목표**: 학습 목표 1
-- **실습 목적**: 실제 비즈니스 시나리오에 대해 Agent 4요소를 State로 모델링하는 연습
-- **실습 유형**: 코드 작성
-- **난이도**: 기초
-- **예상 소요 시간**: 20분
-- **선행 조건**: Python TypedDict 기본 이해
-- **실행 환경**: 로컬 (Linux 기본, macOS 호환)
+<callout icon="💡" color="gray_bg">
+	이 세션의 실습은 `labs/day2/00_basics/` 노트북을 사용한다.
+	프레임워크별 Agent를 직접 만들고 실행하며 4요소를 체감한다.
+</callout>
 
-**과제:**
-다음 시나리오에 대해 `AgentState`를 설계하세요.
+### 🔍 I DO: 프레임워크 기초 체험 {toggle="true"}
+	**시간**: 90분
+	**노트북 순서**:
+	1. `00_setup.ipynb` — 환경 설정, API 키, Langfuse 연결 (15분)
+	2. `01_llm_basics.ipynb` — LLM 호출, 메시지 구조, 스트리밍 (15분)
+	3. `02_langchain_basics.ipynb` — `@tool`, `create_react_agent()` (20분)
+	4. `03_langchain_memory.ipynb` — `InMemorySaver`, `thread_id` (15분)
+	5. `04_langgraph_basics.ipynb` — `StateGraph`, Node-Edge-State (25분)
 
-> "고객 문의를 접수하면, FAQ DB를 검색하고, 답변이 없으면 담당자에게 에스컬레이션하는 고객 지원 Agent"
+	강사가 각 노트북을 라이브로 실행하며 4요소가 어디에 대응하는지 설명한다.
+	<callout icon="💡" color="gray_bg">
+		**관찰 포인트**: 같은 "웹 검색 Agent"가 프레임워크마다 어떻게 달라지는가?
+	</callout>
 
-요구사항:
-1. Goal, Memory, Tool, Control Logic 각각에 해당하는 필드를 정의할 것
-2. FAQ 검색 결과와 에스컬레이션 여부를 State에 포함할 것
-3. 최대 검색 횟수 제한을 State에 반영할 것
+### 🤝 WE DO: Deep Agents 체험 {toggle="true"}
+	**시간**: 20분
+	**노트북**: `05_deep_agents_basics.ipynb`
 
-```python
-from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage
-import operator
+	함께 `create_deep_agent()`를 실행한다.
+	- [ ] 기본 에이전트 생성 (StateBackend)
+	- [ ] 파일 도구 6종 확인 (ls, read_file, write_file 등)
+	- [ ] FilesystemBackend로 전환하여 로컬 파일 접근
+	- [ ] 커스텀 Tool 추가
 
+### 🚀 YOU DO: 프레임워크 비교 분석 {toggle="true"}
+	**시간**: 10분
+	**노트북**: `06_comparison.ipynb`
 
-class CustomerSupportState(TypedDict):
-    """고객 지원 Agent의 State를 설계하세요."""
-    # TODO: Goal 관련 필드
-    # TODO: Memory 관련 필드
-    # TODO: Tool 관련 필드
-    # TODO: Control Logic 관련 필드
-    pass
-```
+	<callout icon="📋" color="yellow_bg">
+		**요구사항**
+		1. 세 프레임워크로 동일한 작업을 수행하고 결과를 비교한다
+		2. 각 프레임워크에서 4요소(Goal, Memory, Tool, Control)가 어디에 대응하는지 정리한다
+		3. 본인의 업무에 가장 적합한 프레임워크를 선택하고 이유를 작성한다
+	</callout>
 
----
-
-### 실습 2: Planner-Executor 그래프 구축
-- **연관 학습 목표**: 학습 목표 2
-- **실습 목적**: Planner-Executor 패턴을 LangGraph StateGraph로 직접 구현
-- **실습 유형**: 코드 작성
-- **난이도**: 중급
-- **예상 소요 시간**: 35분
-- **선행 조건**: 실습 1 완료, LangGraph StateGraph 기본 이해
-- **실행 환경**: 로컬 (Linux 기본, macOS 호환)
-
-**과제:**
-"여행 계획 Agent"를 Planner-Executor 패턴으로 구현하세요.
-
-요구사항:
-1. Planner Node: 여행지, 일정, 예산 정보를 기반으로 sub-task 분해
-2. Executor Node: 각 sub-task를 순차적으로 실행 (실제 Tool 호출은 mock)
-3. Conditional Edge: 모든 task 완료 시 종료, 아니면 다음 task 실행
-4. Re-planning: Executor에서 실패한 task가 있으면 Planner로 돌아가 계획 수정
-
-```python
-from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage
-from langgraph.graph import StateGraph, END
-import operator
-
-
-class TravelPlanState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-    plan: list[str]
-    current_task_index: int
-    results: list[str]
-    failed_tasks: list[str]
-    replan_count: int
-
-
-# TODO: planner_node 구현
-# TODO: executor_node 구현
-# TODO: should_continue 조건 함수 구현
-# TODO: StateGraph 구성 및 실행
-```
-
----
-
-### 실습 3: Agent 구조 판단 워크시트
-- **연관 학습 목표**: 학습 목표 3
-- **실습 목적**: 실제 비즈니스 시나리오에서 Single-step vs Multi-step 판단 능력 배양
-- **실습 유형**: 코드 작성
-- **난이도**: 중급
-- **예상 소요 시간**: 25분
-- **선행 조건**: 실습 1, 2 완료
-- **실행 환경**: 로컬 (Linux 기본, macOS 호환)
-
-**과제:**
-아래 5개 시나리오 각각에 대해 (1) Agent 유형 판단, (2) 이유, (3) State 스키마 초안을 작성하세요.
-
-| # | 시나리오 | Agent 유형 | 이유 | State 핵심 필드 |
-|---|----------|-----------|------|-----------------|
-| 1 | Slack 메시지를 받으면 적절한 채널로 라우팅 | ? | ? | ? |
-| 2 | 코드 리뷰 요청 시 보안/성능/스타일 다각도 분석 | ? | ? | ? |
-| 3 | 주가 데이터를 조회하여 현재 가격 알려주기 | ? | ? | ? |
-| 4 | 사용자 선호도 기반 맞춤 여행 일정 생성 | ? | ? | ? |
-| 5 | PDF 문서에서 특정 조항을 찾아 요약 | ? | ? | ? |
-
-판단 후, 시나리오 2 또는 4 중 하나를 골라 LangGraph `StateGraph`로 구현하세요.
-
----
-
-## 핵심 정리
-- Agent는 **Goal, Memory, Tool, Control Logic** 4요소로 구성된다
-- LangGraph에서 4요소는 `TypedDict` State에 명시적으로 모델링한다
-- **Planner-Executor 패턴**은 복잡한 작업을 Sub-task로 분해하여 단계별로 실행하는 구조다
-- Sub-task 분해 전략은 **순차, 병렬, 계층적** 3가지이며, 의존성 그래프를 기반으로 선택한다
-- **Single-step Agent**는 단순 조회에, **Multi-step Agent**는 다단계 추론이 필요한 작업에 적합하다
-- 프로젝트 초기에는 Single-step으로 시작하고, 복잡도가 증가하면 Multi-step으로 점진적으로 전환한다
+<details>
+<summary>💡 힌트</summary>
+	프레임워크 선택 기준: 복잡도, 제어 수준, 파일 I/O 필요 여부
+</details>

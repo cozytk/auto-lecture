@@ -1,126 +1,93 @@
-# AI Agent 전문 개발 과정 강의 가이드
+# AI Agent 전문 개발 과정
 
-## 수강 대상
+## 과정 개요
 
-- AI 개발자: LLM 기반 애플리케이션 개발 경험이 있는 개발자
-- 데이터 엔지니어: 데이터 파이프라인 구축 경험이 있고 AI Agent에 관심 있는 엔지니어
-- 기술 리더: AI Agent 도입을 검토하는 팀/조직의 기술 의사결정자
+AI Agent를 실무에서 설계·구현·운영할 수 있는 전문가를 양성하는 과정이다.
+문제 정의부터 시스템 설계, LLM 전략, MCP·RAG 구조 판단까지 전 영역을 다룬다.
 
-## 학습 목표
+**대상**: AI 개발자, 데이터 엔지니어, 기술 리더
+**기간**: 5일 (40시간)
+**언어**: 한국어
 
-1. AI Agent의 문제 정의부터 MVP 구현까지 전 과정을 직접 설계하고 구현할 수 있다
-2. MCP(Function Calling), RAG, Hybrid 아키텍처의 차이를 이해하고 상황에 맞게 선택할 수 있다
-3. LangGraph를 활용하여 Agent의 제어 흐름과 상태를 체계적으로 관리할 수 있다
-4. Agent 품질 평가 체계를 설계하고 운영 환경에서의 모니터링·장애 대응 전략을 수립할 수 있다
-5. 실무형 AI Agent MVP를 완성하고 아키텍처를 설명할 수 있다
+---
 
-## 사전 요구사항
+## 수업 구성 원칙
 
-- Python 프로그래밍 중급 이상
-- REST API 개념 이해
-- LLM(ChatGPT, Claude 등) 사용 경험
-- Git 기본 사용법
-- (권장) Docker 기본 사용법
+- **강의 30% / 실습 70%** 비율 유지
+- 모든 실습은 **I DO → WE DO → YOU DO** 3단계로 진행
+- 각 세션은 6단계 개념 구조로 설명: 왜 중요한가 → 핵심 원리 → 실무 의미 → 비교 → 주의사항 → 코드 예제
 
-## 실습 환경
+---
 
-### LLM API
+## 전체 커리큘럼
 
-본 과정은 **OpenRouter**를 통해 LLM API를 호출합니다. OpenRouter는 OpenAI 호환 API를 제공하므로, 다른 모델/프로바이더로 쉽게 교체할 수 있습니다.
+### Day 1 — Agent 문제 정의 & LLM 설계 전략
 
-| 항목 | 값 |
-|------|-----|
-| API Provider | [OpenRouter](https://openrouter.ai) |
-| 기본 모델 | `moonshotai/kimi-k2` (Kimi-K2) |
-| Base URL | `https://openrouter.ai/api/v1` |
-| Python SDK | `openai` (OpenAI 호환) |
+| 세션 | 제목 | 시간 | 핵심 내용 |
+|------|------|------|-----------|
+| 1 | Agent 문제 정의와 과제 도출 | 2h | Pain→Task→Skill→Tool 프레임워크, 업무 패턴 분류 |
+| 2 | LLM 동작 원리 및 프롬프트 전략 심화 | 2h | Context Window, 프롬프트 전략, Structured Output |
+| 3 | Agent 기획서 구조화 | 2h | Task→Sub-task→Workflow 분해, I/O 명확화 |
+| 4 | MCP · RAG · Hybrid 구조 판단 | 2h | Tool 설계 기준, RAG 구조, Hybrid 설계 |
 
-```python
-import os
-from openai import OpenAI
+**Day 1 실습 목록**:
+- `labs/agent-problem-definition/` — 개인 업무 기반 Agent 후보 도출 (분석/설계)
+- `labs/prompt-strategy-comparison/` — 프롬프트 전략별 응답 비교 (Python 코드)
 
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.environ["OPENROUTER_API_KEY"],
-)
+---
 
-MODEL = os.environ.get("MODEL", "moonshotai/kimi-k2")
+### Day 2 — Agent 제어 흐름 설계 & 상태 관리
+
+| 세션 | 제목 | 시간 | 핵심 내용 |
+|------|------|------|-----------|
+| 1 | Agent 4요소 구조 설계 | 2h | Goal·Memory·Tool·Control Logic, LangChain/LangGraph/DeepAgents 비교 |
+| 2 | LangGraph 기반 제어 흐름 설계 | 2h | Node-Edge-State, 조건부 분기, 5가지 워크플로 패턴 |
+| 3 | Tool 호출 통제 & Validation | 2h | Pydantic 스키마, 미들웨어, 무한 루프 방지 |
+| 4 | 구조 리팩토링 & 확장성 설계 | 2h | Planner-Executor 분리, Deep Agents 하네스, Observability |
+
+**Day 2 실습 목록**:
+- `labs/day2/00_basics/` — 프레임워크 기초 (LangChain, LangGraph, DeepAgents)
+- `labs/day2/01_langgraph_workflows/` — LangGraph 그래프 API 및 워크플로 패턴
+- `labs/day2/02_tool_middleware/` — Tool 검증 및 미들웨어
+
+### Day 3 — Agent 시스템 통합 (예정)
+
+> 추후 추가 예정
+
+### Day 4 — 평가 · 운영 · 확장 아키텍처 전략
+
+| 세션 | 제목 | 시간 | 핵심 내용 |
+|------|------|------|-----------|
+| 1 | Agent 품질 평가 체계 설계 | 2h | Accuracy·Faithfulness·Robustness, Golden Test Set, LM-as-a-Judge |
+| 2 | Prompt · RAG · Tool 성능 개선 전략 | 2h | 성능 저하 진단, Prompt 버전 관리, Retrieval Drift 대응 |
+| 3 | 로그 · 모니터링 · 장애 대응 설계 | 2h | Trace 로그 구조, 장애 유형 분류, Guardrail & Validation |
+| 4 | 확장 가능한 서비스 아키텍처 | 2h | Dev–Staging–Prod 분리, Scaling, Multi-Agent, 비용 최적화 |
+
+**Day 4 실습 목록**:
+- `labs/day4-golden-test-evaluation/` — Golden Test Set + LM-as-a-Judge 평가 파이프라인 (Python 코드)
+- `labs/day4-ops-architecture-design/` — 운영 아키텍처 설계 워크시트 (분석/설계)
+
+### Day 5 — 프로젝트 발표 & 최적화 (예정)
+
+> 추후 추가 예정
+
+---
+
+## 디렉토리 구조
+
 ```
-
-> **다른 모델로 교체하려면** `MODEL` 환경변수만 변경하면 됩니다.
-> 예: `MODEL=anthropic/claude-sonnet-4` 또는 `MODEL=openai/gpt-4o`
-
-### 환경 변수 설정
-
-```bash
-export OPENROUTER_API_KEY="sk-or-..."
-export MODEL="moonshotai/kimi-k2"  # 선택: 기본값 사용 시 생략 가능
+ai-agent-dev-v2/
+├── guide/
+│   ├── README.md              # 이 파일 (전체 개요)
+│   ├── day1-session1.md       # Agent 문제 정의와 과제 도출
+│   ├── day1-session2.md       # LLM 동작 원리 및 프롬프트 전략
+│   ├── day1-session3.md       # Agent 기획서 구조화
+│   └── day1-session4.md       # MCP · RAG · Hybrid 구조 판단
+├── slides/
+│   ├── day1-slides.md         # Day 1 Slidev 슬라이드
+│   ├── style.css              # Freesentation 폰트 스타일
+│   └── assets/fonts/          # 폰트 파일
+└── labs/
+    ├── agent-problem-definition/  # 분석/설계 실습
+    └── prompt-strategy-comparison/ # 코드 실습
 ```
-
-### 실행 환경
-
-- **기본**: Linux (Ubuntu 기준)
-- **호환**: macOS (Homebrew 기반 안내 포함)
-- **Python**: 3.10 이상
-
-## 핵심 기술 스택
-
-- LLM Strategy (프롬프트 엔지니어링, Structured Output)
-- RAG (Chunking, Embedding, Retrieval)
-- MCP (Function Calling, Tool 설계)
-- LangGraph (제어 흐름, 상태 관리)
-- Hybrid Architecture (MCP + RAG 통합)
-
-## 수업 일정표
-
-| 일차 | 교시 | 주제 | 시간 | 파일 |
-|------|------|------|------|------|
-| **Day 1** | 1교시 | Agent 문제 정의와 과제 도출 | 2h | [day1-session1.md](day1-session1.md) |
-| | 2교시 | LLM 동작 원리 및 프롬프트 전략 심화 | 2h | [day1-session2.md](day1-session2.md) |
-| | 3교시 | Agent 기획서 구조화 | 2h | [day1-session3.md](day1-session3.md) |
-| | 4교시 | MCP · RAG · Hybrid 구조 판단 | 2h | [day1-session4.md](day1-session4.md) |
-| **Day 2** | 1교시 | Agent 4요소 구조 설계 | 2h | [day2-session1.md](day2-session1.md) |
-| | 2교시 | LangGraph 기반 제어 흐름 설계 | 2h | [day2-session2.md](day2-session2.md) |
-| | 3교시 | Tool 호출 통제 & Validation | 2h | [day2-session3.md](day2-session3.md) |
-| | 4교시 | 구조 리팩토링 & 확장성 설계 | 2h | [day2-session4.md](day2-session4.md) |
-| **Day 3** | 1교시 | MCP(Function Calling) 고급 설계 | 2h | [day3-session1.md](day3-session1.md) |
-| | 2교시 | 외부 API · 데이터 연동 최적화 | 2h | [day3-session2.md](day3-session2.md) |
-| | 3교시 | RAG 성능을 결정하는 4가지 요소 | 2h | [day3-session3.md](day3-session3.md) |
-| | 4교시 | Hybrid 아키텍처 설계 | 2h | [day3-session4.md](day3-session4.md) |
-| **Day 4** | 1교시 | Agent 품질 평가 체계 설계 | 2h | [day4-session1.md](day4-session1.md) |
-| | 2교시 | Prompt · RAG · Tool 성능 개선 전략 | 2h | [day4-session2.md](day4-session2.md) |
-| | 3교시 | 로그 · 모니터링 · 장애 대응 설계 | 2h | [day4-session3.md](day4-session3.md) |
-| | 4교시 | 확장 가능한 서비스 아키텍처 | 2h | [day4-session4.md](day4-session4.md) |
-| **Day 5** | 1교시 | 프로젝트 설계 확정 | 2h | [day5-session1.md](day5-session1.md) |
-| | 2교시 | 핵심 기능 구현 | 2h | [day5-session2.md](day5-session2.md) |
-| | 3교시 | 성능 개선 & 안정화 | 2h | [day5-session3.md](day5-session3.md) |
-| | 4교시 | 최종 시연 및 발표 | 2h | [day5-session4.md](day5-session4.md) |
-
-## Day 2 운영 묶음
-
-Day 2는 **이론 3 : 실습 7** 비율로 운영한다.
-세션 가이드는 유지한다.
-운영 동선은 별도 Day 2 묶음으로 연결한다.
-
-| 구분 | 파일 | 설명 |
-|------|------|------|
-| 운영 개요 | [day2-overview.md](day2-overview.md) | Day 2 전체 진행 순서, 실습 맵, 종료 체크리스트 |
-| Session 1 | [day2-session1.md](day2-session1.md) | Agent 4요소 구조 설계 |
-| Session 2 | [day2-session2.md](day2-session2.md) | LangGraph 기반 제어 흐름 설계 |
-| Session 3 | [day2-session3.md](day2-session3.md) | Tool 호출 통제 & Validation |
-| Session 4 | [day2-session4.md](day2-session4.md) | 구조 리팩토링 & 확장성 설계 |
-| Lab Pack | [`../labs/day2/README.md`](../labs/day2/README.md) | Day 2 실습 패키지 진입점 |
-| Slide Deck | [`../slides/day2-slides.md`](../slides/day2-slides.md) | Day 2 전용 슬라이드 덱 |
-
-## 핵심 산출물
-
-- 아키텍처 다이어그램 (MCP/RAG/Hybrid 구조도)
-- Golden Test Set & 평가표
-- 실무형 Agent MVP (개인 프로젝트)
-
-## 참고 자료
-
-- [LangGraph 공식 문서](https://langchain-ai.github.io/langgraph/)
-- [Anthropic MCP 스펙](https://modelcontextprotocol.io/)
-- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling)
-- [LangChain RAG Tutorial](https://python.langchain.com/docs/tutorials/rag/)

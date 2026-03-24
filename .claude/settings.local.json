@@ -35,7 +35,13 @@
       "mcp__claude_ai_Notion__notion-fetch",
       "Read(//Applications/Google Chrome.app/**)",
       "Bash(npx --yes playwright --version)",
-      "Bash(pip3 list:*)"
+      "Bash(pip3 list:*)",
+      "Bash(rm:*)",
+      "Bash(command:*)",
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:opencode.ai)",
+      "Bash(tmux list-panes:*)",
+      "Bash(gh api:*)"
     ]
   }
 }

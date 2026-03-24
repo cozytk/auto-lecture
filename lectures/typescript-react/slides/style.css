@@ -70,26 +70,69 @@
   overflow-y: auto !important;
 }
 
+/* Mermaid 다이어그램: 컨테이너 너비를 최대한 활용 */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Freesentation 웨이트 시스템 */
 .slidev-layout {
   font-family: 'Freesentation', sans-serif;
   font-weight: 400;
+  /* Regular */
 }
 
 .slidev-layout h1 {
-  font-weight: 800;
+  font-weight: 900;
+  /* Black — 표지/섹션 제목 */
 }
 
 .slidev-layout h2 {
   font-weight: 800;
+  /* ExtraBold — 슬라이드 제목 */
 }
 
 .slidev-layout h3 {
   font-weight: 700;
+  /* Bold — 부제목 */
+}
+
+.slidev-layout h4,
+.slidev-layout h5,
+.slidev-layout h6 {
+  font-weight: 600;
+  /* SemiBold */
 }
 
 .slidev-layout strong,
 .slidev-layout b {
-  font-weight: 700;
+  font-weight: 800;
+  /* ExtraBold — 강조 */
+}
+
+.slidev-layout .text-sm,
+.slidev-layout .text-xs {
+  font-weight: 300;
+  /* Light — 작은 텍스트 */
+}
+
+.slidev-layout blockquote {
+  font-weight: 200;
+  /* ExtraLight — 인용 */
+}
+
+.slidev-layout p,
+.slidev-layout li,
+.slidev-layout span {
+  font-weight: 400;
+  /* Regular — 본문 */
 }
 
 /* 강조 박스 공통 스타일 */

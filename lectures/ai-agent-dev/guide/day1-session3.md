@@ -1,871 +1,711 @@
-# Session 3: Agent 기획서 구조화 (2h)
+# Day 1 - Session 3: Agent 기획서 구조화
 
-## 학습 목표
-
-1. 비즈니스 문제를 체계적인 Agent 기획서로 변환할 수 있다
-2. 기획서의 핵심 구성요소(목적, 입출력, 제약조건, 성공 기준)를 정의하고 작성할 수 있다
-3. 기획서를 기반으로 기술 설계 문서로 전환하는 프로세스를 수행할 수 있다
+**시간**: 2시간 | **대상**: AI 개발자, 데이터 엔지니어, 기술 리더
 
 ---
 
-## 개념 1: 비즈니스 문제에서 Agent 기획서로의 변환
+## 1. 왜 중요한가
 
-### 왜 이것이 중요한가
+### 기획 없는 Agent는 방향 없는 자동화다
 
-Session 1에서 Pain-Task-Skill-Tool로 Agent 후보를 도출했다.
-이제 그 후보를 **실제 구현 가능한 기획서**로 변환해야 한다.
+코드를 먼저 짜고 싶은 충동이 있다.
+하지만 명확하지 않은 Agent는 개발 중반에 방향을 잃는다.
+**구조화된 기획서가 개발 속도와 품질을 동시에 높인다.**
 
-기획서 없이 코딩에 들어가면 "무엇을 만들어야 하는지"가 불명확해진다.
-2024년 Gartner 보고서: AI 프로젝트 실패 원인 1위 → **불명확한 요구사항**
+> "어디서 시작해서 어디서 끝나는지" 모르면
+> 테스트도 못하고 예외 처리도 할 수 없다.
 
-> 기획서 없이 시작하면 4가지 문제가 반드시 발생한다.
-
-**기획서 부재 시 발생하는 문제:**
-
-| 문제 | 증상 |
-|------|------|
-| 범위 무한 확장 | FAQ 봇이 어느새 주문 관리까지 담당 |
-| 성공 기준 부재 | "잘 되는 건지" 아무도 판단 불가 |
-| 입출력 불일치 | 개발자는 JSON, 기획자는 자연어 기대 |
-| 제약조건 누락 | Agent가 고객 개인정보를 외부 API로 전송 |
+**이 세션에서 배우는 것**:
+- Task → Sub-task → Workflow 분해 방법
+- Stateless vs Stateful 구조의 차이와 선택
+- Input–Process–Output 명확화
+- 예외 처리 및 실패 케이스 전략
 
 ---
 
-### 핵심 원리
+## 2. 핵심 원리
 
-> 기획서 = 비즈니스 문제와 기술 구현 사이의 **번역 문서**
+### 2-1. Task → Sub-task → Workflow 분해
 
-**비즈니스팀**: "고객 문의 응답 시간을 줄이고 싶다"
-**개발팀**: "LLM API를 호출하여 JSON을 반환하는 시스템"
-→ 기획서가 이 두 세계를 연결한다
+복잡한 Agent는 하나의 거대한 프롬프트로 구현할 수 없다.
+**Task를 작은 Sub-task로 분해하고, 연결 순서를 Workflow로 정의한다.**
 
-**변환 3단계:**
+#### 분해 원칙
 
-① **비즈니스 문제 정의** → 고통점과 현재 프로세스를 수치로 파악
-② **Agent 기회 식별** → 자동화 대상 vs 사람 개입 필요 구분
-③ **Agent 기획서 생성** → 6가지 구성요소로 명세화
+```
+하나의 Sub-task는 하나의 책임만 가진다.
+Sub-task는 독립적으로 테스트 가능해야 한다.
+Sub-task 출력이 다음 Sub-task 입력이 된다.
+```
+
+#### 분해 예시: 주간 보고서 Agent
+
+```
+Task: 주간 보고서 자동 생성
+
+Sub-task 분해:
+├── ST-1: 데이터 수집
+│   ├── Jira 이슈 현황 가져오기
+│   ├── DB 지표 쿼리
+│   └── 슬랙 주요 메시지 수집
+│
+├── ST-2: 데이터 정제 및 구조화
+│   ├── 원시 데이터 → 표준 포맷 변환
+│   └── 이상치 및 누락 값 처리
+│
+├── ST-3: 요약 생성
+│   ├── 지표 트렌드 분석
+│   └── 자연어 요약 작성 (LLM)
+│
+└── ST-4: 배포
+    ├── 슬랙 채널 발송
+    └── 이메일 발송
+
+Workflow: ST-1 → ST-2 → ST-3 → ST-4
+```
+
+#### Workflow 다이어그램 작성
+
+```
+[트리거: 월요일 오전 9시]
+         ↓
+[ST-1: 데이터 수집]
+         ↓
+     수집 성공?
+    ↙         ↘
+  Yes           No
+   ↓             ↓
+[ST-2: 정제]  [에러 알림]
+   ↓             ↓
+[ST-3: 요약]  [종료]
+   ↓
+[ST-4: 배포]
+   ↓
+[완료 로그]
+```
 
 ---
 
-### 실무에서의 의미
+### 2-2. Stateless vs Stateful 구조
 
-기획서 없이 만든 Agent의 결말은 항상 같다.
-→ 완성 후 "이건 우리가 원한 게 아닙니다" 피드백
+Agent 설계의 중요한 선택: **상태를 어디에 저장하는가?**
 
-**변환 핵심 원칙:**
+#### Stateless (상태 없음)
 
-| 원칙 | 위반 시 문제 |
-|------|------------|
-| Pain-first | 기술 중심 사고로 불필요한 Agent 구현 |
-| 이해관계자 합의 | 구현 후 "이건 우리가 원한 게 아니다" |
-| MVP 범위 | 범위 무한 확장으로 프로젝트 지연 |
-| 정량적 목표 | "잘 되는 건지 모른다" 상태 지속 |
-
----
-
-### 다른 접근법과의 비교
-
-| 구분 | 전통 PRD | Agent 기획서 |
-|------|---------|------------|
-| 동작 명세 | 결정론적 (버튼 클릭 → 주문 생성) | 확률적 동작 포함 |
-| Fallback | 불필요 | 필수 (confidence 0.7 미만 → 에스컬레이션) |
-| LLM 비용 | 고려 없음 | 비용 제약 명시 |
-
----
-
-### 주의사항
-
-> **완벽한 기획서를 쓰려고 시간을 낭비하지 말 것.**
-> 처음부터 모든 시나리오 예측은 불가능하다.
-> **MVP 범위 → 운영 데이터 수집 → 기획서 업데이트** 사이클로 접근한다.
-> 기획서는 한 번 쓰고 끝나는 문서가 아닌 **살아있는 문서(Living Document)**다.
-
----
-
-### 코드 예제
-
-이를 코드로 표현하면:
+각 호출이 독립적이다. 이전 실행을 기억하지 않는다.
 
 ```python
-from dataclasses import dataclass, field
-
-@dataclass
-class BusinessProblem:
-    """Step 1: 비즈니스 문제 정의"""
-    pain: str                      # 현재 고통점
-    stakeholders: list[str]        # 이해관계자
-    current_process: list[str]     # 현재 수동 프로세스
-    cost_of_status_quo: dict       # 현 상태 유지 비용
-
-@dataclass
-class AgentSpec:
-    """Step 3: Agent 기획서"""
-    purpose: str                   # 목적 (한 문장)
-    inputs: list[dict]             # 입력 정의
-    outputs: list[dict]            # 출력 정의
-    constraints: list[str]         # 제약조건
-    success_criteria: list[dict]   # 성공 기준 (정량)
-    scope_boundary: dict           # 범위 경계 (하는 것 / 안 하는 것)
-
-# 실제 시나리오: 고객 문의 자동 응답 Agent
-problem = BusinessProblem(
-    pain="CS팀 5명이 하루 200건 문의를 처리. 70%가 반복 질문. 평균 응답 2시간.",
-    stakeholders=["CS팀장", "고객", "CTO", "개인정보보호 담당자"],
-    current_process=[
-        "1. 고객 채팅/이메일로 문의 (수동 접수)",
-        "2. CS 담당자가 카테고리 분류 (수동 판단)",
-        "3. FAQ DB에서 답변 검색 (수동 반복)",
-        "4. 답변 초안 작성 후 전송 (수동 반복)",
-        "5. 복잡한 문의는 에스컬레이션 (수동 판단)",
-        "6. 처리 결과를 CRM에 기록 (수동 반복)",
-    ],
-    cost_of_status_quo={
-        "인건비": "CS 담당자 5명 x 월 400만원 = 월 2000만원",
-        "기회비용": "야간/주말 미응답으로 인한 고객 이탈",
-    },
-)
-
-for step in problem.current_process:
-    tag = "자동화 대상" if "수동 반복" in step else "사람 개입"
-    print(f"  {step}  --> [{tag}]")
-```
-
-실행 결과:
-
-```
-1. 고객 채팅/이메일로 문의 (수동 접수)  --> [사람 개입]
-2. CS 담당자가 카테고리 분류 (수동 판단)  --> [사람 개입]
-3. FAQ DB에서 답변 검색 (수동 반복)  --> [자동화 대상]
-4. 답변 초안 작성 후 전송 (수동 반복)  --> [자동화 대상]
-5. 복잡한 문의는 에스컬레이션 (수동 판단)  --> [사람 개입]
-6. 처리 결과를 CRM에 기록 (수동 반복)  --> [자동화 대상]
-```
-
----
-
-### Q&A
-
-**Q: 기획서를 누가 작성해야 하나요?**
-A: 기획자(또는 PM)가 주도하고, 개발자가 검토하는 구조가 이상적이다.
-AI Agent 기획은 LLM의 한계를 이해해야 한다.
-→ 개발자가 기획 단계부터 반드시 참여해야 한다.
-
-**Q: 기획서의 적정 분량은?**
-A: MVP 기준으로 **A4 2-5장**이면 충분하다.
-핵심은 분량이 아닌 **구성요소의 완전성**이다.
-목적이 명확하고, 입출력이 예시와 함께 정의되고, 성공 기준이 수치화되면 2장도 충분하다.
-
-<details>
-<summary>퀴즈: Agent 기획서 작성 전에 반드시 확인해야 하는 것은?</summary>
-
-**보기:**
-1. 사용할 LLM 모델의 벤치마크 점수
-2. 현재 수동 프로세스의 구체적 단계와 비용
-3. 경쟁사의 AI Agent 도입 현황
-4. 최신 프롬프트 엔지니어링 논문
-
-**힌트**: 기획서의 목적은 "비즈니스 문제를 해결하는 Agent의 명세"를 정의하는 것이다.
-
-**정답**: 2번. 현재 수동 프로세스를 파악해야 (1) 어디를 자동화할지 식별하고, (2) Agent 도입 후 비용 절감을 정량화할 수 있다.
-1번, 3번, 4번은 기술 설계 단계에서 고려할 사항이다.
-</details>
-
----
-
-## 개념 2: Agent 기획서의 핵심 구성요소
-
-### 왜 이것이 중요한가
-
-Agent 기획서는 **6가지 핵심 구성요소**로 이루어진다.
-각 구성요소는 기획자, 개발자, 이해관계자 간의 **계약(Contract)** 역할을 한다.
-
-> 어느 한 구성요소라도 누락되면 계약이 불완전해진다.
-> 불완전한 계약은 프로젝트 실패로 이어진다.
-
----
-
-### 핵심 원리
-
-6가지 구성요소는 **연쇄적으로 연결**되어 있다.
-
-**목적** → 범위를 결정
-→ **범위** → 입출력을 결정
-→ **입출력** → 제약조건을 도출
-→ **제약조건** → 성공 기준의 측정 방식을 결정
-
-**각 구성요소 정의:**
-
-| 구성요소 | 역할 | 좋은 예 | 나쁜 예 |
-|---------|------|--------|--------|
-| 목적 | Agent의 존재 이유 한 문장 | "응답 시간 2시간→30초 단축" | "고객 서비스 개선" |
-| 입력 | 받는 데이터와 트리거 | "텍스트, 최대 2000자, 한국어/영어" | "고객 데이터" |
-| 출력 | 생성하는 결과 | "JSON 형식 분류 결과 + confidence" | "적절한 답변" |
-| 제약조건 | 해서는 안 될 것 | "고객 PII를 LLM 프롬프트에 포함 금지" | "보안을 지킨다" |
-| 성공 기준 | 측정 가능한 목표 | "정확도 90% 이상, 주간 50건 샘플링" | "잘 동작한다" |
-| 범위 경계 | In/Out of Scope | "환불 처리: Out of Scope" | (미정의) |
-
----
-
-### 실무에서의 의미
-
-실제 프로젝트에서 가장 많은 논쟁이 벌어지는 것: **범위 경계(Scope Boundary)**
-
-"이 기능도 넣으면 좋지 않아요?"라는 요청이 끊임없이 들어온다.
-→ 범위 경계를 명시적으로 문서화하면 "기획서에 Out of Scope"라고 객관적으로 대응 가능하다.
-
-> 범위 경계 없이 시작한 프로젝트는 100% 범위 팽창(Scope Creep)을 경험한다.
-
----
-
-### 다른 접근법과의 비교
-
-| 구분 | User Story | Agent 기획서 |
-|------|-----------|------------|
-| 사용자 관점 | ✅ 잘 포착 | ✅ 포함 |
-| LLM 비용 제약 | ❌ 담기 어려움 | ✅ 포함 |
-| Hallucination 대응 | ❌ 없음 | ✅ Fallback 전략 |
-| 권장 사용 방식 | 단독 | User Story를 보완하여 함께 사용 |
-
----
-
-### 주의사항
-
-> **구체성이 핵심이다.**
-> "적절한 답변" → "JSON 형식의 분류 결과 (category, confidence, suggested_reply)"
-> "보안을 지킨다" → "고객 PII(이름, 전화번호, 주소)를 LLM 프롬프트에 포함하지 않는다"
-> 모호한 기획서는 없는 것보다 위험하다. 각자 다르게 해석하여 논쟁만 추가된다.
-
----
-
-### 코드 예제
-
-이를 코드로 표현하면:
-
-```python
-from dataclasses import dataclass, field
-from enum import Enum
-
-class Priority(str, Enum):
-    MUST = "MUST"     # 필수: 없으면 Agent 가치 없음
-    SHOULD = "SHOULD" # 권장: 있으면 가치 향상
-    COULD = "COULD"   # 선택: 여유 있으면 추가
-
-@dataclass
-class AgentSpecTemplate:
-    """Agent 기획서 표준 템플릿"""
-    purpose: str                                          # 1. 목적
-    inputs: list[dict] = field(default_factory=list)      # 2. 입력
-    outputs: list[dict] = field(default_factory=list)     # 3. 출력
-    constraints: list[dict] = field(default_factory=list) # 4. 제약조건
-    success_criteria: list[dict] = field(default_factory=list) # 5. 성공 기준
-    in_scope: list[str] = field(default_factory=list)     # 6. 범위 - In
-    out_of_scope: list[str] = field(default_factory=list) # 6. 범위 - Out
-
-# 완성된 기획서 예시: 고객 문의 자동 응답 Agent
-cs_agent_spec = AgentSpecTemplate(
-    purpose="CS팀의 반복 문의(FAQ 답변, 주문 상태 조회)를 자동 처리하여 "
-            "평균 응답 시간을 2시간에서 30초 이내로 단축한다.",
-    inputs=[
-        {"name": "customer_message", "type": "string", "required": True,
-         "max_length": 2000, "language": ["ko", "en"],
-         "example": "주문번호 12345 배송이 언제 되나요?"},
-        {"name": "customer_id", "type": "string", "required": True,
-         "format": "UUID", "example": "cust-a1b2c3d4"},
-    ],
-    outputs=[
-        {"name": "classification",
-         "fields": {"category": "FAQ|주문조회|환불|기술지원|기타",
-                    "confidence": "float (0.0~1.0)"}},
-        {"name": "response",
-         "fields": {"message": "답변 텍스트", "sources": "근거 문서 목록"}},
-    ],
-    constraints=[
-        {"type": "보안", "rule": "고객 PII를 LLM 프롬프트에 포함하지 않는다",
-         "violation_impact": "개인정보보호법 위반"},
-        {"type": "비즈니스", "rule": "환불/결제 관련은 반드시 사람에게 에스컬레이션",
-         "violation_impact": "잘못된 환불 처리 시 재무 손실"},
-        {"type": "기술", "rule": "LLM 응답 10초 초과 시 타임아웃 처리",
-         "violation_impact": "고객 대기 시간 증가"},
-    ],
-    success_criteria=[
-        {"metric": "자동 응답률", "target": "60% 이상", "measurement": "일간"},
-        {"metric": "응답 정확도", "target": "90% 이상", "measurement": "주간 50건 샘플링"},
-        {"metric": "평균 응답 시간", "target": "30초 이내", "measurement": "중앙값"},
-    ],
-    in_scope=["FAQ 자동 답변", "주문 상태 조회", "문의 카테고리 분류",
-              "처리 불가 문의 에스컬레이션"],
-    out_of_scope=["환불/결제 처리", "고객 감정 케어", "실시간 음성 통화"],
-)
-
-print(f"[목적] {cs_agent_spec.purpose}")
-print(f"[제약] {len(cs_agent_spec.constraints)}개, [성공기준] {len(cs_agent_spec.success_criteria)}개")
-```
-
-실행 결과:
-
-```
-[목적] CS팀의 반복 문의(FAQ 답변, 주문 상태 조회)를 자동 처리하여 평균 응답 시간을 2시간에서 30초 이내로 단축한다.
-[제약] 3개, [성공기준] 3개
-```
-
----
-
-### Q&A
-
-**Q: 성공 기준의 목표 수치를 어떻게 정해야 하나요?**
-A: 3단계 접근법을 사용한다.
-① 현재 수준 측정: 수동 프로세스의 현재 성능을 먼저 측정한다.
-② 업계 벤치마크 참고: 유사 서비스의 공개 지표를 참고한다.
-③ MVP 목표 분리: MVP에서는 "현재 수준과 동등 이상"을 목표로 설정한다.
-처음부터 99%를 목표로 잡으면 프로젝트가 영원히 완료되지 않는다.
-
-**Q: 범위 경계의 "회색 지대"는 어떻게 처리하나요?**
-A: 명확하지 않은 영역은 **기본적으로 Out of Scope에 넣는다.**
-회색 지대가 발견되면 이해관계자 회의를 소집하여 명시적으로 결정한다.
-결정 근거를 기획서에 기록하지 않으면 "왜 이걸 안 해요?"라는 질문이 반복된다.
-
-<details>
-<summary>퀴즈: 다음 기획서의 성공 기준 중 문제가 있는 것은?</summary>
-
-**보기:**
-1. "자동 응답률 60% 이상 (일간 전체 문의 대비 자동 처리 비율)"
-2. "고객이 만족할 만한 수준의 답변 품질"
-3. "평균 응답 시간 30초 이내 (문의 접수 ~ 답변 전송, 중앙값)"
-4. "에스컬레이션 비율 40% 이하"
-
-**힌트**: 성공 기준은 "측정 가능"해야 한다. 누가 측정하더라도 같은 결과가 나와야 한다.
-
-**정답**: 2번이 문제다.
-"고객이 만족할 만한 수준"은 주관적이어서 측정할 수 없다.
-개선: "자동 응답 후 CSAT 설문 4.0/5.0 이상 (월간, 응답 고객 기준)"
-1번, 3번, 4번은 모두 수치 + 측정 방법이 포함되어 있다.
-</details>
-
----
-
-## 개념 3: 좋은 기획서 vs 나쁜 기획서 비교
-
-### 왜 이것이 중요한가
-
-기획서의 품질은 프로젝트 성패를 좌우한다.
-같은 비즈니스 문제라도 기획서의 구체성에 따라 구현 결과가 완전히 달라진다.
-
-**좋은 기획서**: "무엇을 만들어야 하는지"를 명확히 전달한다.
-**나쁜 기획서**: "알아서 잘 만들어 주세요" 메시지를 전달한다.
-
----
-
-### 핵심 원리
-
-> 좋은 기획서와 나쁜 기획서의 차이: **단 하나, 구체성**
-
-**구체성 판단 기준:**
-"이 문장을 읽는 사람이 다르게 해석할 여지가 없는가?"
-
-**나쁜 예**: "고객 서비스를 개선한다"
-→ 10명이 읽으면 10가지 다른 해석이 가능
-
-**좋은 예**: "CS팀의 FAQ 자동 답변으로 평균 응답 시간을 2시간에서 30초로 단축한다"
-→ 모두가 동일하게 이해
-
----
-
-### 실무에서의 의미
-
-기획서 품질을 검증하는 가장 효과적인 방법: **"3인 해석 테스트"**
-
-① 기획서를 3명에게 독립적으로 읽게 한다.
-② 각자 이해한 내용을 설명하게 한다.
-③ 3명의 설명이 일치하면 → 좋은 기획서.
-④ 불일치하면 → 모호한 부분이 있다는 신호.
-
-5분이면 가능하지만, 수주 간의 개발 낭비를 예방할 수 있다.
-
----
-
-### 다른 접근법과의 비교
-
-일부 애자일 팀: "문서보다 작동하는 소프트웨어"를 강조하며 기획서를 생략한다.
-
-| 구분 | 일반 소프트웨어 | Agent 프로젝트 |
-|------|--------------|--------------|
-| 코드 수정 비용 | 낮음 | 중간 |
-| 잘못된 행동(이메일 발송, DB 삭제) | 쉽게 롤백 | 비가역적 |
-| LLM 호출 비용 | 해당 없음 | 매번 발생 |
-| 권장 방식 | "일단 만들고 고치자" 가능 | 기획서 필수 |
-
----
-
-### 주의사항
-
-> **좋은 기획서 ≠ 완벽한 기획서**
-> "6가지 구성요소가 각각 최소 1개의 구체적 예시를 포함하고, 성공 기준이 모두 수치화되어 있으면" 시작하기에 충분하다.
-> 나머지는 운영하면서 보완한다.
-
----
-
-### 코드 예제
-
-이를 코드로 표현하면:
-
-```python
-def validate_spec_quality(spec: dict) -> dict:
-    """Agent 기획서 품질 검증"""
-    issues = []
-    score = 0
-    max_score = 6
-
-    # 1. 목적: 구체적 행동 + 정량적 목표 포함 여부
-    purpose = spec.get("purpose", "")
-    has_action = any(w in purpose for w in ["하여", "위해", "단축", "향상", "자동"])
-    if len(purpose) > 20 and has_action:
-        score += 1
-    else:
-        issues.append("목적이 모호하거나 정량적 목표가 없습니다")
-
-    # 2. 입력: 타입 + 예시 포함 여부
-    inputs = spec.get("inputs", [])
-    if inputs and all("type" in i and "example" in i for i in inputs):
-        score += 1
-    else:
-        issues.append("입력에 타입 또는 예시가 없습니다")
-
-    # 3. 출력: 타입 + 필드 정의 포함 여부
-    outputs = spec.get("outputs", [])
-    if outputs and all("fields" in o or "type" in o for o in outputs):
-        score += 1
-    else:
-        issues.append("출력 형식이 정의되지 않았습니다")
-
-    # 4. 제약조건: 보안 + 비즈니스 + 기술 3종 포함
-    constraints = spec.get("constraints", [])
-    types = {c.get("type") for c in constraints}
-    if {"보안", "비즈니스", "기술"}.issubset(types):
-        score += 1
-    else:
-        issues.append("제약조건에 보안/비즈니스/기술 유형이 필요합니다")
-
-    # 5. 성공 기준: 수치 + 측정 방법 포함
-    criteria = spec.get("success_criteria", [])
-    if criteria and all("target" in c and "measurement" in c for c in criteria):
-        score += 1
-    else:
-        issues.append("성공 기준에 수치 또는 측정 방법이 없습니다")
-
-    # 6. 범위: In/Out 모두 정의
-    if spec.get("in_scope") and spec.get("out_of_scope"):
-        score += 1
-    else:
-        issues.append("In Scope 또는 Out of Scope가 정의되지 않았습니다")
-
-    grade = "A" if score >= 5 else "B" if score >= 3 else "C"
-    return {"score": f"{score}/{max_score}", "grade": grade, "issues": issues}
-
-# 비교 검증
-good_result = validate_spec_quality({
-    "purpose": "CS팀의 반복 문의를 자동 처리하여 응답 시간을 단축한다",
-    "inputs": [{"type": "string", "example": "배송 문의"}],
-    "outputs": [{"fields": {"category": "string"}}],
-    "constraints": [
-        {"type": "보안", "rule": "PII 금지"},
-        {"type": "비즈니스", "rule": "환불은 에스컬레이션"},
-        {"type": "기술", "rule": "10초 타임아웃"},
-    ],
-    "success_criteria": [{"target": "60%", "measurement": "일간"}],
-    "in_scope": ["FAQ 답변"],
-    "out_of_scope": ["환불 처리"],
-})
-bad_result = validate_spec_quality({"purpose": "고객 서비스 개선"})
-print(f"좋은 기획서: {good_result['grade']} ({good_result['score']})")
-print(f"나쁜 기획서: {bad_result['grade']} ({bad_result['score']})")
-```
-
-실행 결과:
-
-```
-좋은 기획서: A (5/6)
-나쁜 기획서: C (0/6)
-```
-
----
-
-### Q&A
-
-**Q: 기획서를 LLM으로 자동 생성하면 품질이 괜찮은가요?**
-A: LLM이 생성한 초안은 **출발점**으로만 사용해야 한다.
-LLM은 일반적인 구조와 항목을 잘 잡아주지만, 도메인 특화 제약조건을 빠뜨린다.
-LLM 초안 생성 → 도메인 전문가 검토 → 이해관계자 합의의 3단계를 거쳐야 한다.
-
-**Q: 나쁜 기획서를 받았을 때 개발자는 어떻게 대응해야 하나요?**
-A: 기획서 품질 검증 체크리스트를 만들어 **기획 리뷰 회의**에서 사용한다.
-"목적에 정량적 목표가 없습니다" 같은 구체적 피드백을 주고, 기준을 통과해야 개발을 시작하는 게이트(Gate)를 설정한다.
-이는 기획자 비판이 아닌 **프로젝트 실패를 예방하는 프로세스**다.
-
-<details>
-<summary>퀴즈: 다음 기획서 목적 문장의 문제점을 3가지 이상 지적하시오</summary>
-
-**기획서 목적**: "AI를 활용하여 업무를 자동화하고 효율성을 높인다"
-
-**힌트**: 좋은 목적 문장의 3가지 요소: "대상(누구를)", "행동(무엇을)", "목표(어느 수준까지)"
-
-**정답**:
-1. **대상 불명확**: "업무"가 어떤 업무인지 특정되지 않음
-2. **행동 불명확**: "자동화"의 범위가 정의되지 않음
-3. **정량적 목표 부재**: "효율성을 높인다"는 측정 불가
-4. **수혜자 불명확**: 누가 혜택을 받는지 언급 없음
-5. **기술 특정**: "AI를 활용하여"는 수단을 목적에 포함한 것
-
-개선 예시: "CS팀의 반복 문의(FAQ, 주문 조회)를 자동 응답하여 평균 처리 시간을 2시간에서 30초로 단축하고, 24시간 고객 응대를 가능하게 한다"
-</details>
-
----
-
-## 개념 4: 기획서에서 기술 설계로의 전환
-
-### 왜 이것이 중요한가
-
-기획서: "무엇(What)을 만들 것인가"
-기술 설계: "어떻게(How) 만들 것인가"
-
-기획서의 각 구성요소가 기술 설계의 어떤 항목으로 매핑되는지 이해해야 한다.
-
-> 기획서에 "보안을 지킨다"고 써 있는데 기술 설계에 보안 컴포넌트가 없는 상황이 발생해서는 안 된다.
-
----
-
-### 핵심 원리
-
-기획서 → 기술 설계는 **1:1 매핑**이 가능하다.
-
-| 기획서 항목 | 기술 설계 항목 | 매핑 예시 |
-|------------|--------------|----------|
-| 목적 | 아키텍처 선택 | 멀티스텝 자동화 → Agent |
-| 입력 | API 인터페이스 + 전처리 | 텍스트 2000자 → 토큰 제한 처리 |
-| 출력 | 응답 스키마 (Pydantic) | JSON 출력 → BaseModel |
-| 제약조건 | Guardrail + Validation | PII 제약 → 마스킹 레이어 |
-| 성공 기준 | 테스트 + 모니터링 | 정확도 90% → Golden Test Set |
-| 범위 경계 | 라우터 + Fallback | 환불 Out → 사람에게 라우팅 |
-
----
-
-### 실무에서의 의미
-
-가장 자주 발생하는 문제: **"기획서에 없는 결정을 개발자가 임의로 내리는 것"**
-
-기획서에 "에러 시 적절히 처리한다"라고만 써 있으면:
-- 개발자 A → 재시도 구현
-- 개발자 B → 기본값 반환 구현
-- 개발자 C → 에러 전파 구현
-
-→ 기획서 단계에서 에러 시나리오와 Fallback 동작을 반드시 명시해야 한다.
-
----
-
-### 다른 접근법과의 비교
-
-| 구분 | 폭포수(Waterfall) | Agent 권장 방식 |
-|------|-----------------|----------------|
-| 흐름 | 기획 → 설계 → 구현 | 기획 → 설계 초안 → 프로토타입 → 검증 → 반복 |
-| LLM 예측 가능성 | 결정론적 → 완전 예측 가능 | 비결정적 → 사전 예측 어려움 |
-| 피드백 루프 | 느림 | 빠름 (권장) |
-
----
-
-### 주의사항
-
-> **기획서와 기술 설계는 양방향 추적(Traceability)이 되어야 한다.**
-> 기획서의 각 항목에 ID를 부여한다 (예: SPEC-001).
-> 기술 설계의 각 컴포넌트가 어떤 SPEC 항목에 대응하는지 매핑한다.
-> Git을 활용하여 기획서도 버전 관리하는 것을 권장한다.
-
----
-
-### 코드 예제
-
-이를 코드로 표현하면:
-
-```python
-import re
-from pydantic import BaseModel, Field
-from dataclasses import dataclass, field
-
-@dataclass
-class TechnicalDesign:
-    """기술 설계 문서"""
-    architecture: str
-    llm_config: dict = field(default_factory=dict)
-    guardrails: list[dict] = field(default_factory=list)
-    test_plan: list[dict] = field(default_factory=list)
-
-def spec_to_technical_design(spec) -> TechnicalDesign:
-    """기획서 → 기술 설계 자동 변환"""
-    # 1. 아키텍처 결정 (목적/범위에서)
-    has_knowledge = any("FAQ" in s or "검색" in s for s in spec.in_scope)
-    has_actions = any("처리" in s or "분류" in s for s in spec.in_scope)
-    architecture = "Hybrid (Agent+RAG)" if has_knowledge and has_actions else "Agent"
-
-    # 2. Guardrail 도출 (제약조건에서)
-    guardrails = [
-        {"type": c["type"],
-         "impl": "PII 마스킹" if c["type"] == "보안" else "금지 행동 분류기"}
-        for c in spec.constraints
-    ]
-
-    # 3. 테스트 계획 도출 (성공 기준에서)
-    test_plan = [
-        {"metric": c["metric"], "target": c["target"],
-         "test_type": "Golden Test" if "정확도" in c["metric"] else "부하 테스트"}
-        for c in spec.success_criteria
-    ]
-
-    return TechnicalDesign(
-        architecture=architecture, guardrails=guardrails, test_plan=test_plan,
-        llm_config={"model": "moonshotai/kimi-k2", "temperature": 0.1},
+# Stateless Agent 예시
+def classify_ticket(ticket_content: str) -> dict:
+    """
+    호출할 때마다 독립적으로 분류.
+    이전 분류 결과를 참조하지 않는다.
+    """
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=128,
+        messages=[{
+            "role": "user",
+            "content": f"티켓 분류: {ticket_content}"
+        }]
     )
+    return parse_result(response)
+```
 
-# 기획서 제약: "고객 PII를 LLM에 전송하지 않는다"
-# → 기술 설계: PII 마스킹 전처리 레이어
-class PIIMasker:
-    PII_PATTERNS = {
-        "phone": re.compile(r"01[016789]-?\d{3,4}-?\d{4}"),
-        "email": re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
+**장점**:
+- 구현이 단순하다
+- 수평 확장이 쉽다 (여러 인스턴스 동시 실행)
+- 실패 시 재시도가 안전하다
+
+**적합**:
+- 단발성 처리 (티켓 분류, 번역)
+- 독립적인 배치 작업
+- 이전 결과가 다음에 영향 없는 경우
+
+---
+
+#### Stateful (상태 있음)
+
+이전 실행 결과를 기억하고 다음 실행에 활용한다.
+
+```python
+# Stateful Agent 예시
+class ResearchAgent:
+    def __init__(self):
+        self.memory = []          # 수집한 정보
+        self.visited_urls = set() # 방문한 URL
+        self.findings = []        # 발견한 인사이트
+
+    def search(self, query: str) -> str:
+        # 이전 findings를 Context에 포함
+        context = "\n".join(self.findings[-5:])  # 최근 5개
+
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=512,
+            system=f"지금까지 발견한 내용:\n{context}",
+            messages=[{"role": "user", "content": f"검색: {query}"}]
+        )
+
+        result = response.content[0].text
+        self.findings.append(result)  # 상태 업데이트
+        return result
+```
+
+**장점**:
+- 긴 작업을 단계적으로 처리 가능
+- 이전 결과를 기반으로 다음 행동 결정
+- 대화형 상호작용 지원
+
+**적합**:
+- 다단계 리서치
+- 대화형 Assistant
+- 장기 프로젝트 관리
+
+---
+
+#### 선택 기준
+
+```
+이전 실행 결과가 다음 실행에 필요한가?
+  → Yes: Stateful
+  → No: Stateless
+
+동시에 여러 인스턴스를 실행해야 하는가?
+  → Yes: Stateless 선호
+  → No: 상관없음
+
+실행 중간에 사람이 개입할 수 있는가?
+  → Yes: Stateful (중간 상태 저장 필요)
+  → No: 상관없음
+```
+
+---
+
+### 2-3. Input–Process–Output 명확화
+
+모든 Sub-task는 I/O가 명확해야 한다.
+명확하지 않으면 테스트할 수 없다.
+
+#### IPO 템플릿
+
+```
+Sub-task 이름: [명확한 동사 + 명사]
+─────────────────────────────────────
+INPUT
+  - 타입: [dict / str / list / ...]
+  - 필수 필드: [필드명: 타입, 설명]
+  - 옵션 필드: [필드명: 타입, 기본값]
+  - 예시:
+    {
+      "ticket_id": "PROJ-123",
+      "content": "로그인 버튼이 클릭되지 않음",
+      "priority": "high"
     }
 
-    def mask(self, text: str) -> tuple[str, list[str]]:
-        detected = []
-        for pii_type, pattern in self.PII_PATTERNS.items():
-            if pattern.search(text):
-                detected.append(pii_type)
-                text = pattern.sub(f"[{pii_type.upper()}_MASKED]", text)
-        return text, detected
+PROCESS
+  - 처리 단계: [번호로 나열]
+  - 사용 도구: [LLM / API / DB / ...]
+  - 판단 로직: [분기 조건]
 
-# 기획서 제약: "confidence 0.7 미만이면 에스컬레이션"
-# → 기술 설계: 출력 검증 레이어
-class AgentOutput(BaseModel):
-    category: str = Field(description="문의 카테고리")
-    confidence: float = Field(ge=0.0, le=1.0)
-    response_message: str = Field(description="고객 답변")
-
-    def should_escalate(self) -> bool:
-        return self.confidence < 0.7 or self.category == "환불"
-
-masker = PIIMasker()
-masked, detected = masker.mask("전화번호는 010-1234-5678입니다")
-print(f"마스킹: {masked}, 감지: {detected}")
-
-output = AgentOutput(category="환불", confidence=0.99, response_message="답변")
-print(f"에스컬레이션: {output.should_escalate()}")
+OUTPUT
+  - 타입: [dict / str / list / ...]
+  - 필드: [필드명: 타입, 설명]
+  - 예시:
+    {
+      "category": "bug",
+      "severity": 3,
+      "assignee": "backend-team",
+      "reason": "UI 인터랙션 오류"
+    }
+─────────────────────────────────────
+예외 케이스:
+  - content가 비어있으면 → 에러 반환
+  - category 분류 불가 → "unclassified" 반환
 ```
 
-실행 결과:
+#### 실무 예시: 이슈 분류 Sub-task
 
-```
-마스킹: 전화번호는 [PHONE_MASKED]입니다, 감지: ['phone']
-에스컬레이션: True
+```python
+from dataclasses import dataclass
+from typing import Optional, Literal
+
+@dataclass
+class TicketInput:
+    """이슈 분류 Sub-task 입력"""
+    ticket_id: str
+    content: str
+    priority: Literal["low", "medium", "high"] = "medium"
+
+@dataclass
+class TicketOutput:
+    """이슈 분류 Sub-task 출력"""
+    category: Literal["bug", "feature", "question", "unclassified"]
+    severity: int  # 1-5
+    assignee: str
+    reason: str
+    confidence: float  # 0.0-1.0
+
+def classify_ticket(input: TicketInput) -> TicketOutput:
+    """
+    INPUT: TicketInput (ticket_id, content, priority)
+    PROCESS:
+      1. LLM으로 카테고리 분류
+      2. 우선순위 기반 심각도 결정
+      3. 카테고리 기반 담당자 라우팅
+    OUTPUT: TicketOutput (category, severity, assignee, reason)
+    EXCEPTION:
+      - content 빈 값 → ValueError
+      - LLM 응답 파싱 실패 → category="unclassified"
+    """
+    if not input.content.strip():
+        raise ValueError(f"빈 content: {input.ticket_id}")
+
+    # ... LLM 호출 및 처리 ...
+    pass
 ```
 
 ---
 
-### Q&A
+### 2-4. 예외 처리 및 실패 케이스 전략
 
-**Q: 기획서에서 기술 설계로 변환할 때 가장 자주 발생하는 문제는?**
-A: **기획서에 없는 결정을 개발자가 임의로 내리는 것**이다.
-"에러 시 적절히 처리한다"는 3가지 서로 다른 구현으로 이어진다.
-해결: "LLM 응답 실패 시 3회 재시도 후 실패하면 기본 안내 메시지를 반환한다"처럼 구체적으로 정의한다.
+Agent는 실패할 수 있다. **실패를 설계해야 한다.**
 
-**Q: 기획서와 기술 설계의 변경 관리는 어떻게 하나요?**
-A: 기획서 항목에 ID를 부여한다 (예: SPEC-001).
-기술 설계의 각 컴포넌트가 어떤 SPEC 항목에 대응하는지 매핑한다.
-기획서가 변경되면 영향받는 기술 설계 항목을 즉시 식별할 수 있다.
+#### 실패 유형 분류
 
-<details>
-<summary>퀴즈: 다음 제약조건을 기술 설계로 변환하시오</summary>
+| 유형 | 예시 | 처리 전략 |
+|------|------|-----------|
+| 외부 API 실패 | Jira 타임아웃 | 재시도 + 대체 데이터 |
+| LLM 응답 오류 | JSON 파싱 실패 | 재시도 + 기본값 |
+| 데이터 오류 | 필수 필드 누락 | 검증 후 조기 실패 |
+| 비즈니스 로직 오류 | 예산 초과 | 사람에게 에스컬레이션 |
+| 무한 루프 | Agent가 같은 행동 반복 | 최대 시도 횟수 제한 |
 
-**제약조건**: "Agent의 LLM 응답 시간이 10초를 초과하면 타임아웃 처리하고, 고객에게 '잠시 후 다시 시도해주세요' 메시지를 반환한다. 타임아웃 발생 횟수를 모니터링하여 일 50건 이상이면 알림을 발송한다."
-
-**힌트**: 이 제약조건에는 3가지 기술 요소가 포함되어 있다.
-(1) 타임아웃 처리, (2) Fallback 응답, (3) 모니터링 + 알림
-
-**정답**:
-1. **타임아웃 처리**: `asyncio.wait_for(llm_call(), timeout=10.0)`
-2. **Fallback 응답**: `try-except TimeoutError` → 고정 메시지 반환
-3. **모니터링**: 타임아웃 카운터 증가 (Prometheus/CloudWatch), 일 50건 임계값 알림
+#### 재시도 전략
 
 ```python
-import asyncio
+import time
+from functools import wraps
 
-async def agent_with_timeout(message: str) -> dict:
-    try:
-        result = await asyncio.wait_for(llm_call(message), timeout=10.0)
-        return result
-    except asyncio.TimeoutError:
-        metrics.timeout_counter.inc()  # 모니터링
-        return {"message": "잠시 후 다시 시도해주세요", "fallback": True}
+def retry(max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0):
+    """지수 백오프 재시도 데코레이터"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            current_delay = delay
+            while attempt < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempt += 1
+                    if attempt == max_attempts:
+                        raise  # 마지막 시도 실패 시 예외 전파
+                    print(f"시도 {attempt}/{max_attempts} 실패: {e}")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+        return wrapper
+    return decorator
+
+@retry(max_attempts=3, delay=1.0)
+def call_jira_api(ticket_id: str) -> dict:
+    """Jira API 호출 (실패 시 최대 3회 재시도)"""
+    # ... API 호출 ...
+    pass
 ```
+
+#### 에스컬레이션 전략
+
+```python
+from enum import Enum
+
+class EscalationLevel(Enum):
+    AUTO_RETRY = "auto_retry"          # 자동 재시도
+    FALLBACK = "fallback"              # 대체 처리
+    NOTIFY = "notify"                  # 알림 발송
+    HUMAN_REVIEW = "human_review"      # 사람 검토 요청
+    HALT = "halt"                      # 전체 중단
+
+def handle_failure(error: Exception, context: dict) -> EscalationLevel:
+    """에러 유형에 따라 에스컬레이션 수준 결정"""
+    error_type = type(error).__name__
+
+    if error_type in ["TimeoutError", "ConnectionError"]:
+        return EscalationLevel.AUTO_RETRY
+    elif error_type == "JSONDecodeError":
+        return EscalationLevel.FALLBACK
+    elif error_type == "InsufficientFundsError":
+        return EscalationLevel.HUMAN_REVIEW
+    elif error_type == "DataCorruptionError":
+        return EscalationLevel.HALT
+    else:
+        return EscalationLevel.NOTIFY
+```
+
+---
+
+## 3. 실무 의미
+
+### 기획서가 팀 커뮤니케이션 도구다
+
+잘 작성된 기획서는:
+- 개발자 → 개발 범위 명확화
+- QA → 테스트 케이스 도출
+- 기획자 → 요구사항 검증
+- 운영자 → 모니터링 포인트 파악
+
+IPO 명세는 단위 테스트의 기반이 된다:
+```
+Input → 테스트 입력값
+Output → 기대 출력값
+Exception → 에러 케이스 테스트
+```
+
+---
+
+## 4. 비교
+
+### Stateless vs Stateful 비교
+
+| 항목 | Stateless | Stateful |
+|------|-----------|----------|
+| 구현 복잡도 | 낮음 | 높음 |
+| 확장성 | 매우 좋음 | 제한적 |
+| 실패 복구 | 단순 재시도 | 체크포인트 필요 |
+| 메모리 사용 | 낮음 | 높음 |
+| 적합 패턴 | 자동화형 | Planner형 |
+| 디버깅 | 쉬움 | 어려움 |
+
+---
+
+## 5. 주의사항
+
+### 기획서 작성 실수
+
+**① Sub-task 경계가 모호함**
+- "데이터 처리"는 너무 광범위하다
+- "원시 JSON → 정규화 DataFrame 변환"처럼 구체적으로 작성하라
+
+**② 성공 케이스만 정의**
+- 실패 케이스를 미리 정의하지 않으면 런타임에 놀라게 된다
+- "외부 API가 실패하면 어떻게 되는가?" 반드시 답하라
+
+**③ 상태 저장 위치 미결정**
+- Stateful Agent에서 상태를 어디에 저장할지 미리 결정하라
+- 메모리? DB? Redis? 결정 기준: 재시작 후에도 유지돼야 하는가?
+
+**④ 입출력 타입 불일치**
+- Sub-task A의 출력이 Sub-task B의 입력 타입과 맞아야 한다
+- Python dataclass나 Pydantic으로 명시하면 오류를 조기에 발견한다
+
+---
+
+## 6. 코드 예제
+
+### 완성된 Agent 기획서 코드 템플릿
+
+```python
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Literal
+from enum import Enum
+
+class AgentType(Enum):
+    AUTOMATION = "자동화형"
+    ANALYSIS = "분석형"
+    PLANNER = "Planner형"
+
+class StateType(Enum):
+    STATELESS = "stateless"
+    STATEFUL = "stateful"
+
+@dataclass
+class SubTask:
+    """Sub-task 명세"""
+    id: str
+    name: str
+    description: str
+    input_schema: Dict
+    output_schema: Dict
+    tools: List[str]
+    failure_cases: List[Dict]  # [{"condition": ..., "action": ...}]
+
+@dataclass
+class AgentBlueprint:
+    """Agent 기획서 전체 구조"""
+    # 기본 정보
+    name: str
+    version: str = "0.1.0"
+    agent_type: AgentType = AgentType.AUTOMATION
+    state_type: StateType = StateType.STATELESS
+
+    # 문제 정의
+    pain: str = ""
+    task: str = ""
+    success_metric: str = ""
+
+    # 구조 설계
+    subtasks: List[SubTask] = field(default_factory=list)
+    workflow: List[str] = field(default_factory=list)  # subtask id 순서
+
+    # 글로벌 실패 처리
+    global_failures: List[Dict] = field(default_factory=list)
+
+    def validate(self) -> List[str]:
+        """기획서 완성도 검증"""
+        issues = []
+        if not self.pain:
+            issues.append("Pain 정의 필요")
+        if not self.success_metric:
+            issues.append("성공 기준 정의 필요")
+        if not self.subtasks:
+            issues.append("Sub-task 최소 1개 이상 필요")
+        if not self.workflow:
+            issues.append("Workflow 순서 정의 필요")
+        # 워크플로우의 모든 ID가 subtask에 존재하는지 확인
+        subtask_ids = {st.id for st in self.subtasks}
+        for wf_id in self.workflow:
+            if wf_id not in subtask_ids:
+                issues.append(f"Workflow에 존재하지 않는 subtask: {wf_id}")
+        return issues
+
+# 실제 사용 예시
+weekly_report = AgentBlueprint(
+    name="주간 보고서 자동화 Agent",
+    agent_type=AgentType.AUTOMATION,
+    state_type=StateType.STATELESS,
+    pain="매주 3시간을 보고서 수동 작성에 낭비",
+    task="Jira/DB 데이터를 수집하여 주간 요약 보고서 자동 생성 및 발송",
+    success_metric="보고서 생성 시간 3h → 5분 이하, 정확도 95% 이상",
+    subtasks=[
+        SubTask(
+            id="ST-1",
+            name="데이터 수집",
+            description="Jira와 DB에서 주간 데이터 수집",
+            input_schema={"week_start": "date", "week_end": "date"},
+            output_schema={"jira_issues": "list", "db_metrics": "dict"},
+            tools=["jira_api", "db_query"],
+            failure_cases=[
+                {"condition": "Jira API 타임아웃", "action": "AUTO_RETRY x3"},
+                {"condition": "DB 연결 실패", "action": "NOTIFY + HALT"},
+            ]
+        ),
+        SubTask(
+            id="ST-2",
+            name="요약 생성",
+            description="수집된 데이터를 LLM으로 요약",
+            input_schema={"jira_issues": "list", "db_metrics": "dict"},
+            output_schema={"summary_text": "str", "highlights": "list"},
+            tools=["llm_summarize"],
+            failure_cases=[
+                {"condition": "LLM 응답 품질 저하", "action": "HUMAN_REVIEW 플래그"},
+            ]
+        ),
+    ],
+    workflow=["ST-1", "ST-2"],
+)
+
+# 검증
+issues = weekly_report.validate()
+if issues:
+    print("기획서 문제점:", issues)
+else:
+    print("기획서 검증 완료")
+```
+
+---
+
+## Q&A
+
+**Q. Sub-task 분해는 얼마나 세분화해야 하는가?**
+
+> 독립적으로 테스트할 수 있는 최소 단위가 적당하다.
+> 너무 세분화하면 오케스트레이션 복잡도가 높아진다.
+> 너무 크게 묶으면 실패 원인 파악이 어렵다.
+> "하나의 도구를 사용하는 단위"가 좋은 기준이다.
+
+**Q. Stateful Agent에서 상태를 잃으면 어떻게 하는가?**
+
+> 체크포인트(Checkpoint) 전략을 사용한다.
+> 각 Sub-task 완료 시 상태를 영속 저장소(DB, Redis)에 저장한다.
+> 실패 시 마지막 체크포인트부터 재시작한다.
+
+**Q. 예외 처리를 미리 다 정의할 수 있는가?**
+
+> 모든 경우를 미리 정의하기는 어렵다.
+> 하지만 "외부 의존성 실패", "데이터 오류", "LLM 응답 오류" 세 범주만 커버해도 80%의 실패를 처리할 수 있다.
+> 나머지는 운영 중 발견되는 대로 추가한다.
+
+---
+
+## 퀴즈
+
+### Q1. Sub-task 분해 원칙
+
+다음 중 올바른 Sub-task 분해 원칙이 아닌 것은?
+
+- A) 하나의 Sub-task는 하나의 책임만 가진다
+- B) Sub-task는 독립적으로 테스트 가능해야 한다
+- C) 하나의 Sub-task에 가능한 많은 기능을 묶어 효율을 높인다
+- D) Sub-task 출력이 다음 Sub-task 입력이 된다
+
+<details>
+<summary>힌트</summary>
+단일 책임 원칙(SRP)이 Sub-task 분해에도 적용된다.
+</details>
+
+<details>
+<summary>정답 및 해설</summary>
+
+**정답: C**
+
+하나의 Sub-task에 많은 기능을 묶으면 단일 책임 원칙을 위반한다.
+실패 시 어디서 문제가 생겼는지 파악하기 어렵고, 부분 재시도가 불가능해진다.
+각 Sub-task는 명확하고 단일한 목적을 가져야 한다.
+
 </details>
 
 ---
 
-## 실습
+### Q2. Stateful vs Stateless 선택
 
-### 실습 1: Agent 기획서 작성
+다음 시나리오에서 Stateful 구조가 반드시 필요한 경우는?
 
-- **연관 학습 목표**: 학습 목표 1, 2
-- **실습 목적**: 비즈니스 문제를 분석하여 6가지 구성요소를 갖춘 Agent 기획서를 직접 작성한다
-- **실습 유형**: 분석 + 문서 작성
-- **난이도**: 기초
-- **예상 소요 시간**: 30분 (I DO 5분 / WE DO 10분 / YOU DO 15분)
-- **선행 조건**: Session 1 실습 1 완료 (Pain-Task-Skill-Tool 분석)
-- **실행 환경**: 로컬 (문서 작성)
+- A) 이메일 제목에서 카테고리를 추출하는 작업 (건당 독립 처리)
+- B) PDF를 텍스트로 변환하는 작업
+- C) 사용자와 대화하며 점진적으로 요구사항을 수집하는 작업
+- D) 이미지에서 텍스트를 OCR하는 작업
 
-**I DO**: 강사가 "주간 보고서 자동화" Pain을 6가지 구성요소로 변환하는 과정을 시연한다.
-각 항목을 채우면서 "왜 이 구성요소가 필요한지"를 설명한다.
+<details>
+<summary>힌트</summary>
+이전 결과를 기억하고 다음 행동에 활용해야 하는 경우는?
+</details>
 
-**WE DO**: "코드 리뷰 자동화 Agent" 시나리오를 함께 분석한다.
-목적 문장 작성 → 입력 정의 → 제약조건 도출 순서로 단계마다 멈추고 질문을 받는다.
+<details>
+<summary>정답 및 해설</summary>
 
-**YOU DO**: Session 1에서 도출한 Agent 후보 1개를 선택하여 아래 템플릿의 모든 항목을 채워 기획서를 완성한다.
+**정답: C**
 
-```python
-my_agent_spec = {
-    "purpose": "",
-    # → "누구를 위해 + 무엇을 + 정량적 목표" 형식으로 작성
+대화형 요구사항 수집은 이전 대화 내용을 기억해야 한다.
+사용자가 말한 내용을 누적해서 기억하지 못하면 대화가 처음부터 다시 시작된다.
+A, B, D는 각 입력이 독립적으로 처리되므로 Stateless로 충분하다.
 
-    "inputs": [
-        # 최소 2개: name, type, required, max_length(해당 시), example
-    ],
-
-    "outputs": [
-        # 최소 2개: name, type, fields(JSON인 경우), example
-    ],
-
-    "constraints": [
-        # 최소 3개 (보안 1개 + 비즈니스 1개 + 기술 1개)
-        # 각 제약: type, rule, violation_impact
-    ],
-
-    "success_criteria": [
-        # 최소 2개: metric, target(수치), measurement(측정 방법)
-    ],
-
-    "in_scope": [
-        # 최소 3개: Agent가 하는 것
-    ],
-    "out_of_scope": [
-        # 최소 2개: Agent가 하지 않는 것
-    ],
-}
-```
-
-작성 후 `validate_spec_quality()` 함수로 검증하여 등급 B 이상을 목표로 한다.
-
-**정답 예시** (주간 보고서 자동화):
-
-```python
-my_agent_spec = {
-    "purpose": "개발팀의 주간 보고서 작성에 소요되는 3시간을 자동화하여 10분 이내로 단축한다",
-    "inputs": [
-        {"name": "week_start", "type": "date", "required": True, "example": "2025-03-03"},
-        {"name": "team_id", "type": "string", "required": True, "example": "team-backend"},
-    ],
-    "outputs": [
-        {"name": "report", "fields": {"summary": "string", "jira_tickets": "list", "git_commits": "list"}},
-        {"name": "confluence_url", "type": "string", "example": "https://confluence.../weekly-report"},
-    ],
-    "constraints": [
-        {"type": "보안", "rule": "개인별 커밋 내역을 외부 서비스에 전송하지 않는다", "violation_impact": "개인정보 유출"},
-        {"type": "비즈니스", "rule": "미완료 티켓은 '진행중'으로 표시하고 마감일 초과 시 강조", "violation_impact": "보고서 정확성 저하"},
-        {"type": "기술", "rule": "모든 API 호출 30초 타임아웃", "violation_impact": "보고서 생성 지연"},
-    ],
-    "success_criteria": [
-        {"metric": "보고서 생성 시간", "target": "10분 이내", "measurement": "금요일 오전 평균"},
-        {"metric": "데이터 정확도", "target": "95% 이상", "measurement": "주간 수동 검토"},
-    ],
-    "in_scope": ["Jira 티켓 수집", "Git 커밋 요약", "Confluence 저장", "Slack 알림"],
-    "out_of_scope": ["팀원 개별 성과 평가", "타팀 보고서 생성"],
-}
-```
+</details>
 
 ---
 
-### 실습 2: 좋은 기획서 vs 나쁜 기획서 개선
+### Q3. IPO 명세 작성
 
-- **연관 학습 목표**: 학습 목표 2
-- **실습 목적**: 품질이 낮은 기획서를 분석하고 개선점을 도출한다
-- **실습 유형**: 분석 + 개선
-- **난이도**: 중급
-- **예상 소요 시간**: 25분 (I DO 5분 / WE DO 8분 / YOU DO 12분)
-- **선행 조건**: 실습 1 완료
-- **실행 환경**: 로컬 (문서 작성 + Python 코드 실행)
+다음 Sub-task의 IPO 명세에서 빠진 항목은?
 
-**I DO**: 강사가 아래 "나쁜 기획서"의 문제점을 항목별로 분석하고 개선 방향을 설명한다.
-
-**WE DO**: 첫 3개 항목(목적, 입력, 출력)을 함께 개선한다. 매 항목마다 멈추고 "왜 이렇게 써야 하는가?"를 토론한다.
-
-**YOU DO**: 나머지 항목(제약조건, 성공기준, 범위)을 스스로 개선하고, `validate_spec_quality()`로 개선 전후를 비교한다.
-
-```python
-bad_spec_to_fix = {
-    "purpose": "AI 챗봇을 만들어서 고객 서비스를 개선한다",
-    "inputs": [{"name": "user_input"}],
-    "outputs": [{"name": "answer"}],
-    "constraints": [{"rule": "적절하게 동작해야 한다"}],
-    "success_criteria": [{"metric": "성능이 좋아야 한다"}],
-    "in_scope": ["모든 고객 문의 처리"],
-    "out_of_scope": [],
-}
-# 각 항목의 문제점을 분석하고 개선하세요
+```
+Sub-task: 이슈 분류
+INPUT: ticket_content (str)
+OUTPUT: {"category": str, "assignee": str}
+PROCESS: LLM으로 카테고리 분류 후 담당자 매핑
 ```
 
-**검증 기준:**
-- 모든 6개 항목에 대해 문제점이 분석되었는가
-- 개선 후 기획서가 검증 등급 A를 받는가
-- 개선 사유가 구체적으로 설명되었는가
+- A) 입력 타입
+- B) 출력 타입
+- C) 예외 케이스
+- D) 처리 단계
+
+<details>
+<summary>힌트</summary>
+IPO 명세에서 실패 시 처리 방법을 정의하는 항목은?
+</details>
+
+<details>
+<summary>정답 및 해설</summary>
+
+**정답: C**
+
+예외 케이스(실패 처리)가 없다.
+최소한 다음을 정의해야 한다:
+- content가 비어있으면?
+- LLM 응답 파싱 실패하면?
+- 매핑되는 담당자가 없으면?
+
+예외 케이스 없는 IPO는 미완성이다.
+
+</details>
 
 ---
 
-### 실습 3: 기획서에서 기술 설계 초안 도출
+### Q4. 실패 처리 전략
 
-- **연관 학습 목표**: 학습 목표 3
-- **실습 목적**: 작성한 기획서를 기술 설계 문서로 변환하고, 아키텍처 선택을 정당화한다
-- **실습 유형**: 설계
-- **난이도**: 중급
-- **예상 소요 시간**: 30분 (I DO 5분 / WE DO 10분 / YOU DO 15분)
-- **선행 조건**: 실습 1 완료
-- **실행 환경**: 로컬 (문서 작성 + Python 코드 실행)
+다음 중 "외부 결제 API가 간헐적으로 타임아웃 발생"에 가장 적합한 처리 전략은?
 
-**I DO**: 강사가 CS Agent 기획서를 `spec_to_technical_design()` 함수로 변환하고, 자동 생성된 기술 설계의 의미를 설명한다.
+- A) 즉시 전체 Agent를 중단한다
+- B) 지수 백오프를 적용한 자동 재시도를 3회 시도한다
+- C) 사람에게 즉시 에스컬레이션한다
+- D) 오류를 무시하고 다음 단계를 진행한다
 
-**WE DO**: "Guardrail 도출" 단계를 함께 수행한다. 제약조건 3개를 각각 어떤 기술 컴포넌트로 변환하는지 함께 토론한다.
+<details>
+<summary>힌트</summary>
+간헐적 네트워크 오류는 재시도로 해결되는 경우가 많다.
+</details>
 
-**YOU DO**: 실습 1에서 작성한 기획서를 기술 설계로 변환하고, 아래 항목을 보완한다.
+<details>
+<summary>정답 및 해설</summary>
 
-```python
-design_supplement = {
-    "아키텍처_선택_근거": {
-        "선택": "Agent / RAG / Hybrid 중 하나",
-        "근거": ["이유 1", "이유 2"],
-        "대안_배제_이유": "...",
-    },
-    "에러_시나리오": [
-        {"시나리오": "LLM 타임아웃", "대응": "기획서 제약조건 참고"},
-        {"시나리오": "입력 언어 미지원", "대응": "..."},
-        {"시나리오": "외부 API 장애", "대응": "..."},
-    ],
-}
-```
+**정답: B**
 
-**검증 기준:**
-- 아키텍처 선택이 기획서의 목적/범위와 논리적으로 일치하는가
-- 기획서의 모든 제약조건이 기술 설계의 구체적 컴포넌트에 매핑되었는가
-- 에러 시나리오가 최소 3개 이상 정의되었는가
+간헐적 타임아웃은 네트워크 문제인 경우가 많아 재시도로 해결된다.
+지수 백오프(1초 → 2초 → 4초)로 서버에 부담을 주지 않으면서 재시도한다.
+3회 후에도 실패하면 그때 에스컬레이션을 결정한다.
+
+</details>
 
 ---
 
-## 핵심 정리
+### Q5. Workflow 설계
 
-- Agent 기획서는 **기획자-개발자-이해관계자 간의 계약**이다
-- 기획서 없이 개발하면 → 범위 확장, 성공 기준 부재, 입출력 불일치가 발생한다
-- 6가지 핵심 구성요소: **목적, 입력, 출력, 제약조건, 성공 기준, 범위 경계**
-- 좋은 기획서의 핵심: **구체성과 측정 가능성** ("잘 동작한다" → "정확도 90% 이상, 주간 50건 샘플링")
-- 기획서 → 기술 설계는 **1:1 매핑**: 목적→아키텍처, 제약→Guardrail, 성공 기준→테스트
+다음 Workflow에서 문제점은?
+
+```
+ST-1: 보고서 생성 (LLM 요약)
+ST-2: 데이터 수집 (DB 쿼리)
+Workflow: ST-1 → ST-2
+```
+
+<details>
+<summary>힌트</summary>
+ST-1은 ST-2의 결과물이 필요하지 않은가?
+</details>
+
+<details>
+<summary>정답 및 해설</summary>
+
+**순서가 잘못되었다.**
+
+ST-1(보고서 생성)은 ST-2(데이터 수집)의 결과를 입력으로 사용한다.
+데이터가 없는데 보고서를 먼저 생성할 수 없다.
+올바른 Workflow: ST-2(데이터 수집) → ST-1(보고서 생성)
+
+Sub-task 간 의존 관계를 항상 확인하고 순서를 정의해야 한다.
+
+</details>
+
+---
+
+## 실습 안내
+
+> 실습 상세는 `labs/day1/s3-agent-blueprint/README.md` 참고
+
+### 강의 (30분)
+
+Agent 구조 패턴 3가지(자동화형/분석형/Planner형)와 다이어그램 구성 요소(Node, Edge, 색상 규칙, 고급 요소) 설명.
+
+### 시연 (25분)
+
+강사가 Planner형 Agent를 중심으로 Excalidraw 다이어그램을 단계별로 구축한다.
+- 기본 뼈대 → HITL → 병렬 처리 → 재시도/폴백 → 체크포인트
+
+### 과제 (45분)
+
+Session 1에서 도출한 Agent 후보 1개를 Excalidraw로 구조 다이어그램을 작성한다.
+- 노션 데이터베이스에 제출
+
+### 공유 (20분)
+
+4-5명이 다이어그램을 발표하고 피드백을 주고받는다.

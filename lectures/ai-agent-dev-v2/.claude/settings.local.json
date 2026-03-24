@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npx slidev:*)",
-      "mcp__claude_ai_Notion__notion-fetch"
-    ]
-  }
-}

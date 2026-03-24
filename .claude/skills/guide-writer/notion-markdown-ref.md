@@ -347,6 +347,32 @@ D) CPU 할당 방식
 
 ---
 
+## 스크린샷 어노테이션
+
+교안에 웹페이지 스크린샷을 넣을 때, 하이라이트가 필요하면 **하이브리드 방식**을 사용한다.
+(CSS 주입은 사이트 스타일에 의해 조용히 실패하므로 사용하지 않는다.)
+
+상세 가이드: `screenshot-annotation.md` 참조.
+
+```
+playwright (스크린샷 + DOM 요소 좌표 획득)
+    ↓
+Pillow (박스/채우기/밑줄/텍스트 어노테이션 그리기)
+    ↓
+auto-lecture-assets repo (git push)
+    ↓
+raw.githubusercontent.com URL
+    ↓
+Notion 이미지 삽입: ![캡션](URL)
+```
+
+노션 마크다운에서 이미지 삽입:
+```markdown
+![Docker 아키텍처 스크린샷](https://raw.githubusercontent.com/cozytk/auto-lecture-assets/main/screenshots/{topic}/image-name.png)
+```
+
+---
+
 ## 노션 업로드
 
 가이드 .md 파일을 Notion API로 업로드할 때:
