@@ -1,4 +1,4 @@
-# Day 4 Session 4 — 확장 가능한 서비스 아키텍처
+**lf_config# Day 4 Session 4 — 확장 가능한 서비스 아키텍처
 
 > **세션 목표**: Dev–Staging–Prod 환경 분리, 수평/수직 Scaling 전략, Multi-Agent 구조 설계, 운영 비용 최적화를 실무에 적용한다.
 
