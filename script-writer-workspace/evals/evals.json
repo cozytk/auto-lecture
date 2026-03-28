@@ -1,0 +1,22 @@
+{
+  "skill_name": "script-writer",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mini-fixture-scripts",
+      "prompt": "아래 슬라이드에 발표자 대본(presenter notes)을 작성해줘. 슬라이드 파일은 script-writer-workspace/test-fixture/slides/slides.md이고, 가이드 파일은 script-writer-workspace/test-fixture/guide/day1-session1.md이야. 수강 대상은 주니어 개발자(CLI 기본 조작 가능)이야. 슬라이드의 원본 마크다운은 그대로 보존하고 <!-- [스크립트] ... --> 형태의 HTML 주석으로 대본을 추가해줘. 결과를 output 파일에 저장해줘.",
+      "expected_output": "6개 슬라이드 모두에 대본이 있고, v-click과 [click] 수가 일치하며, 구어체로 작성되고, Q&A 대비가 포함된 완전한 presenter notes",
+      "files": [
+        "script-writer-workspace/test-fixture/slides/slides.md",
+        "script-writer-workspace/test-fixture/guide/day1-session1.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "code-slide-depth",
+      "prompt": "아래 코드 슬라이드에 발표자 대본을 작성해줘. 코드가 포함된 슬라이드이므로 줄 단위 해설이 필수야. 가이드를 참고해서 구어체로 작성하고 결과를 output 파일에 저장해.\n\n슬라이드:\n```markdown\n---\ntransition: slide-left\n---\n\n# Git 기본 명령어\n\n```bash {all|1-3|5-8|10-12}\n# 1. 저장소 초기화\nmkdir my-project\ncd my-project\ngit init\n\n# 2. 파일 추가 및 스테이징\necho '# My Project' > README.md\ngit add README.md\ngit status\n\n# 3. 커밋\ngit commit -m '프로젝트 초기화'\ngit log --oneline\n```\n\n<v-clicks>\n\n- `git init`: 현재 디렉토리를 Git 저장소로\n- `git add`: Working → Staging\n- `git commit`: Staging → Repository\n\n</v-clicks>\n```\n\n가이드: Git의 기본 워크플로는 init → add → commit이다. git init은 .git 디렉토리를 생성한다. git add는 Working Directory에서 Staging Area로 파일을 이동시킨다. git commit은 Staging Area의 스냅샷을 Repository에 저장한다.",
+      "expected_output": "코드 줄 단위 해설이 포함되고, 라인 하이라이트 전환(all|1-3|5-8|10-12)에 맞춰 [click]이 3개 있으며, v-clicks의 3개 불릿에 대해서도 [click]이 3개 있는 대본",
+      "files": []
+    }
+  ]
+}

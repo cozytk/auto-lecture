@@ -1,0 +1,37 @@
+{
+  "eval_id": 2,
+  "eval_name": "export-troubleshoot",
+  "prompt": "이미 slides.md가 있는데 npx slidev export로 PDF 내보내기가 안 돼. 에러 메시지가 'Cannot find module playwright-chromium'이라고 나와. 해결 방법 알려줘. 그리고 Claude Code Bash에서 dev server를 백그라운드로 띄우는 방법도 알려줘.",
+  "assertions": [
+    {
+      "name": "playwright-install-command",
+      "description": "Provides the correct playwright-chromium install command",
+      "check": "contains npm/pnpm install playwright-chromium (with -D or --save-dev)"
+    },
+    {
+      "name": "tty-problem-explained",
+      "description": "Explains WHY the dev server dies in background (TTY issue)",
+      "check": "mentions TTY or pseudo-terminal or interactive stdin issue"
+    },
+    {
+      "name": "script-wrapper-pattern",
+      "description": "Provides the script -q /dev/null wrapper solution",
+      "check": "contains 'script -q /dev/null' or 'script -q'"
+    },
+    {
+      "name": "polling-pattern",
+      "description": "Shows how to wait for server to be ready (curl polling)",
+      "check": "contains curl polling loop or wait-for-ready pattern"
+    },
+    {
+      "name": "exit-code-143",
+      "description": "Explains that exit code 143 from kill is normal",
+      "check": "mentions exit code 143 or SIGTERM as expected/normal"
+    },
+    {
+      "name": "failing-patterns-warned",
+      "description": "Warns about patterns that don't work (plain &, nohup)",
+      "check": "mentions that simple & or nohup won't work"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "run_id": "eval-export-troubleshoot-with_skill",
+  "expectations": [
+    {
+      "text": "playwright-install-command",
+      "passed": true,
+      "evidence": "Shows 'npm install -D playwright-chromium' and 'pnpm add -D playwright-chromium' with devDependency flag"
+    },
+    {
+      "text": "tty-problem-explained",
+      "passed": true,
+      "evidence": "Explicitly explains 'TTY(pseudo-terminal) 요구' and that Claude Code Bash doesn't provide a TTY, causing the server to die in 2-3 seconds"
+    },
+    {
+      "text": "script-wrapper-pattern",
+      "passed": true,
+      "evidence": "Provides 'script -q /dev/null npx slidev --port 3030 > /tmp/slidev.log 2>&1 &' with detailed explanation table"
+    },
+    {
+      "text": "polling-pattern",
+      "passed": true,
+      "evidence": "Shows curl polling loop with 'curl -s -o /dev/null -w \"%{http_code}\"' checking for HTTP 200, 1s intervals, 30 retries"
+    },
+    {
+      "text": "exit-code-143",
+      "passed": true,
+      "evidence": "Explains 128 + 15 (SIGTERM) = 143 and states it is normal behavior, not an error"
+    },
+    {
+      "text": "failing-patterns-warned",
+      "passed": true,
+      "evidence": "Explicitly lists failing patterns: plain '&', 'nohup', '< /dev/null &', 'setsid', and 'run_in_background: true' with explanations of why each fails"
+    }
+  ]
+}

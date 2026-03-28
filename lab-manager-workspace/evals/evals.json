@@ -1,0 +1,17 @@
+{
+  "skill_name": "lab-manager",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "mcp-vs-cli 주제의 실습을 만들어줘. lectures/mcp-vs-cli/guide/ 에 가이드가 있어.",
+      "expected_output": "lectures/mcp-vs-cli/labs/ 디렉토리에 I DO → WE DO → YOU DO 3단계 구조의 실습이 생성됨. 코드 실습과 README 중심 실습이 적절히 혼합. feedback.md 포함.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "mcp-vs-cli 주제의 실습을 만들어줘. 특히 MCP 서버 만들기는 코드 실습으로, CLI vs MCP 비교는 README 중심 실습으로 설계해줘. lectures/mcp-vs-cli/guide/ 에 가이드가 있어.",
+      "expected_output": "코드 실습(MCP 서버)은 src/ + Justfile + solution/ 구조, README 중심 실습(비교)은 artifacts/ 구조로 구분 생성. 형식 선택이 프롬프트 지시와 일치.",
+      "files": []
+    }
+  ]
+}

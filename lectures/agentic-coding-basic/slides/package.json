@@ -1,0 +1,16 @@
+{
+  "name": "agentic-coding-basic-slides",
+  "private": true,
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "^52.14.1",
+    "@slidev/theme-default": "^0.25.0"
+  },
+  "devDependencies": {
+    "playwright-chromium": "latest"
+  }
+}

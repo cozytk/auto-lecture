@@ -1,5 +1,37 @@
+# Dependencies
 node_modules/
+.venv/
+venv/
+
+# Environment / Secrets
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Build
+dist/
 tmp/
-.omc/
+
+# OS
 .DS_Store
 *.log
+
+# IDE / Agent configs
+.agent/
+.agents/
+.continue/
+.kiro/
+.omc/
+.omx/
+.openagent/
+.windsurf/
+
+# Claude worktrees
+.claude/worktrees/

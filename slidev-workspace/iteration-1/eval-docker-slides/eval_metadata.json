@@ -1,0 +1,47 @@
+{
+  "eval_id": 1,
+  "eval_name": "docker-slides-creation",
+  "prompt": "Docker 입문 강의 슬라이드를 만들어야 해. 컨테이너 vs VM 비교, Dockerfile 기본 문법, docker-compose 소개를 다루는 15장 정도의 slides.md를 작성해줘. 코드 블록에 하이라이트도 넣고 v-click 애니메이션도 활용해줘.",
+  "assertions": [
+    {
+      "name": "valid-slidev-frontmatter",
+      "description": "slides.md starts with valid YAML headmatter (theme, title)",
+      "check": "file starts with --- and contains theme: and title:"
+    },
+    {
+      "name": "slide-count-target",
+      "description": "Contains approximately 15 slides (12-18 range)",
+      "check": "count of --- slide separators is between 12 and 18"
+    },
+    {
+      "name": "code-highlighting",
+      "description": "Uses Slidev code highlighting syntax like {2,3} or {1|2-3}",
+      "check": "contains code blocks with curly brace line highlighting"
+    },
+    {
+      "name": "v-click-usage",
+      "description": "Uses v-click or v-clicks for progressive reveal",
+      "check": "contains v-click or <v-clicks>"
+    },
+    {
+      "name": "layout-variety",
+      "description": "Uses multiple layout types (not just default)",
+      "check": "contains at least 2 different layout: values"
+    },
+    {
+      "name": "canvas-overflow-safety",
+      "description": "No single slide has more than 6 bullet points or 15 lines of code",
+      "check": "no slide between --- separators has excessive content"
+    },
+    {
+      "name": "unocss-classes",
+      "description": "Uses UnoCSS/Tailwind utility classes for styling",
+      "check": "contains class names like text-xl, bg-, rounded, font-bold etc."
+    },
+    {
+      "name": "presenter-notes",
+      "description": "Includes presenter notes (HTML comments)",
+      "check": "contains <!-- ... --> blocks"
+    }
+  ]
+}

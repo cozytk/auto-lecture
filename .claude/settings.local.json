@@ -41,7 +41,12 @@
       "WebFetch(domain:developers.openai.com)",
       "WebFetch(domain:opencode.ai)",
       "Bash(tmux list-panes:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(git:*)",
+      "Bash(xargs -0 du -c)",
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Bash(done)"
     ]
   }
 }

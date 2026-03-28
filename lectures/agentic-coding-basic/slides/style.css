@@ -1,0 +1,160 @@
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-1Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-2ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-3Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-4Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-5Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-6SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-7Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-8ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Freesentation';
+  src: url('./assets/fonts/Freesentation-9Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+:root {
+  --slidev-font-sans: 'Freesentation', ui-sans-serif, system-ui, sans-serif;
+  --slidev-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+#slide-content {
+  overflow-y: auto !important;
+}
+
+/* Mermaid 다이어그램 */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Freesentation 웨이트 시스템 */
+.slidev-layout {
+  font-family: 'Freesentation', sans-serif;
+  font-weight: 400;
+}
+
+.slidev-layout h1 {
+  font-weight: 900;
+}
+
+.slidev-layout h2 {
+  font-weight: 800;
+}
+
+.slidev-layout h3 {
+  font-weight: 700;
+}
+
+.slidev-layout h4,
+.slidev-layout h5,
+.slidev-layout h6 {
+  font-weight: 600;
+}
+
+.slidev-layout strong,
+.slidev-layout b {
+  font-weight: 800;
+}
+
+.slidev-layout .text-sm,
+.slidev-layout .text-xs {
+  font-weight: 300;
+}
+
+.slidev-layout blockquote {
+  font-weight: 200;
+}
+
+.slidev-layout p,
+.slidev-layout li,
+.slidev-layout span {
+  font-weight: 400;
+}
+
+/* 강조 박스 다크모드 */
+.dark .box-blue {
+  background: #1e293b;
+  border-left: 4px solid #60a5fa;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  color: #e2e8f0;
+}
+
+.dark .box-green {
+  background: #14332a;
+  border-left: 4px solid #4ade80;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  color: #e2e8f0;
+}
+
+.dark .box-red {
+  background: #451a1a;
+  border-left: 4px solid #f87171;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  color: #e2e8f0;
+}
+
+.dark .box-yellow {
+  background: #422006;
+  border-left: 4px solid #facc15;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  color: #e2e8f0;
+}

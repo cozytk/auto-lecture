@@ -1,0 +1,25 @@
+# 포모도로 타이머 예시 프로젝트 Justfile
+
+# 기본: 테스트 실행
+default: test
+
+# 테스트 실행
+test:
+    cd {{justfile_directory()}} && python -m unittest test_pomodoro -v
+
+# 포모도로 시작 (5초짜리 — 빠른 데모용)
+demo-start:
+    cd {{justfile_directory()}} && python pomodoro.py start --duration 5
+
+# 휴식 타이머 (5초짜리 — 빠른 데모용)
+demo-break:
+    cd {{justfile_directory()}} && python pomodoro.py break --duration 5
+
+# 통계 출력
+stats:
+    cd {{justfile_directory()}} && python pomodoro.py stats
+
+# 세션 데이터 초기화
+clean:
+    cd {{justfile_directory()}} && rm -f sessions.json
+    @echo "세션 데이터 초기화 완료"

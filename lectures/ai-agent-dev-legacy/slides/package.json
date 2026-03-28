@@ -1,0 +1,12 @@
+{
+  "name": "ai-agent-dev-v2-slides",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "dependencies": {
+    "@slidev/cli": "^52.14.1",
+    "@slidev/theme-default": "^0.25.0"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.58.2"
+  }
+}

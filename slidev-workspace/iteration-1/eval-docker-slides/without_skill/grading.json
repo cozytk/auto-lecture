@@ -1,0 +1,45 @@
+{
+  "run_id": "eval-docker-slides-without_skill",
+  "expectations": [
+    {
+      "text": "valid-slidev-frontmatter",
+      "passed": true,
+      "evidence": "Lines 1-17 contain valid YAML frontmatter with theme: default, title: 'Docker 입문 - 컨테이너 기술의 이해', plus highlighter, transition, and other valid Slidev config fields."
+    },
+    {
+      "text": "slide-count-target",
+      "passed": false,
+      "evidence": "19 slides total (1 title + 18 separator-delimited slides). Exceeds the 12-18 range by 1. Slides: title, 오늘 다룰 내용, 전통적 배포의 문제, 가상화 기술의 진화, 컨테이너 vs VM, 상세 비교, Docker 핵심 개념 (section), 3대 구성요소, 기본 명령어, Dockerfile이란, Dockerfile 기본 문법, Dockerfile 주요 명령어 정리, 이미지 빌드와 실행, Docker Compose (section), Compose가 필요한 이유, docker-compose.yml 작성, Compose 명령어, 핵심 정리, 감사합니다."
+    },
+    {
+      "text": "code-highlighting",
+      "passed": true,
+      "evidence": "Multiple code blocks use Slidev highlighting syntax: {all|1-3|4-6|all} (line 71), {1|3|5|7|9|11|all} (line 242), {1|3-4|6-7|9-10|12-13|15-16|18|all} (line 308), {1-2|4-5|7-8|10-11|all} (line 366), {1|2-11|12-18|19-25|26-28|all} (line 455), {1-2|4-5|7-8|10-11|13-14|16-17|all} (line 494)."
+    },
+    {
+      "text": "v-click-usage",
+      "passed": true,
+      "evidence": "Extensive use of both <v-click> and <v-clicks> throughout the deck. Found on slides 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18. Both single-element reveals (<v-click>) and list reveals (<v-clicks>) are used."
+    },
+    {
+      "text": "layout-variety",
+      "passed": true,
+      "evidence": "Three distinct layout types used: layout: center (lines 37, 176, 401, 523), layout: two-cols (line 52), layout: end (line 589). Remaining slides use default layout implicitly."
+    },
+    {
+      "text": "canvas-overflow-safety",
+      "passed": false,
+      "evidence": "Slide 16 (docker-compose.yml) has a code block spanning ~26 lines (lines 456-488), well over the 15-line limit. Slide 11 (Dockerfile 기본 문법) has a code block of ~19 lines (lines 308-328). Slide 17 (Compose 명령어) has a code block of ~17 lines (lines 494-512). Multiple slides violate the 15-line code limit."
+    },
+    {
+      "text": "unocss-classes",
+      "passed": true,
+      "evidence": "Extensive UnoCSS/Tailwind utility classes used throughout: text-xl, text-3xl, text-6xl, text-lg, text-sm, bg-blue-500, bg-green-500, bg-purple-500, bg-orange-500, bg-red-500, bg-yellow-500, bg-opacity-20, bg-opacity-10, rounded, font-bold, p-3, p-4, p-6, mt-4, mt-8, mb-2, mb-8, ml-4, pt-12, px-2, py-1, grid, grid-cols-2, grid-cols-3, gap-6, gap-8, text-center, text-gray-400, text-green-400, flex."
+    },
+    {
+      "text": "presenter-notes",
+      "passed": false,
+      "evidence": "No HTML comments (<!-- -->) found anywhere in the file. Zero presenter notes across all 19 slides."
+    }
+  ]
+}

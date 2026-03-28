@@ -1,0 +1,45 @@
+{
+  "run_id": "eval-docker-slides-with_skill",
+  "expectations": [
+    {
+      "text": "valid-slidev-frontmatter",
+      "passed": true,
+      "evidence": "Lines 1-11 contain valid YAML frontmatter with theme: default, title: Docker 입문 - 컨테이너의 세계로, plus author, transition, lineNumbers, colorSchema, and fonts fields"
+    },
+    {
+      "text": "slide-count-target",
+      "passed": true,
+      "evidence": "17 slides counted (title, 4 section dividers, two-cols-header comparison, table slide, dockerfile commands, layer optimization, build/run, compose intro, compose yaml, compose commands, summary, end slide). 17 is within the 12-18 range"
+    },
+    {
+      "text": "code-highlighting",
+      "passed": true,
+      "evidence": "Multiple code blocks use Slidev highlighting: ```dockerfile {1|3|5|7|9|11|all} (line 204), ```dockerfile {3-4} (lines 249, 268), ```bash {1|3|5|7|all} (line 300), ```yaml {1-2|3-9|10-16|17-21|all} (line 380), ```bash {1-2|4-5|7-8|10-11|13-14|all} (line 417)"
+    },
+    {
+      "text": "v-click-usage",
+      "passed": true,
+      "evidence": "Extensive use of <v-clicks> (lines 45, 175, 220, 314, 346) and <div v-click> (lines 54, 136, 286, 355, 434) for progressive reveal throughout the presentation"
+    },
+    {
+      "text": "layout-variety",
+      "passed": true,
+      "evidence": "3 different layout types used: layout: section (lines 30, 147, 189, 331), layout: two-cols-header (line 65), layout: end (line 472)"
+    },
+    {
+      "text": "canvas-overflow-safety",
+      "passed": false,
+      "evidence": "Slide 14 (docker-compose.yml, lines 380-403) contains ~22 lines of YAML code, exceeding the 15-line limit. The code block spans from the comment line through the volumes definition. Slide 9 (Dockerfile commands) has 6 bullet points which is at the limit but acceptable"
+    },
+    {
+      "text": "unocss-classes",
+      "passed": true,
+      "evidence": "Extensive UnoCSS/Tailwind usage throughout: mt-12, flex, items-center, gap-4, text-xl, text-gray-400, abs-br, mr-12, mb-8, text-sm, bg-red-900/30, border-l-4, border-red-500, p-4, rounded-r-lg, grid, grid-cols-2, gap-6, bg-blue-900/30, bg-amber-900/30, mt-8, etc."
+    },
+    {
+      "text": "presenter-notes",
+      "passed": true,
+      "evidence": "HTML comment presenter notes on every slide: lines 25-27, 37-39, 60-62, 120-122, 142-144, 154-156, 184-186, 196-198, 231-238, 292-294, 323-328, 338-340, 372-374, 405-411, 440-442, 467-469, 487-489"
+    }
+  ]
+}

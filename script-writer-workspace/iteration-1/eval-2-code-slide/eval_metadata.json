@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "code-slide-depth",
+  "prompt": "코드 슬라이드 1장에 줄 단위 해설 포함 발표자 대본 작성",
+  "assertions": [
+    {
+      "id": "line-by-line",
+      "text": "코드 블록의 주요 명령어(mkdir, cd, git init, echo, git add, git status, git commit, git log)에 대한 개별 설명이 존재한다",
+      "type": "qualitative"
+    },
+    {
+      "id": "click-count",
+      "text": "코드 하이라이트 3단계 + v-clicks 3개 = 총 [click] 6개가 존재한다",
+      "type": "programmatic"
+    },
+    {
+      "id": "confusion-point",
+      "text": "💡 헷갈림 포인트 마커가 최소 1개 존재한다",
+      "type": "programmatic"
+    },
+    {
+      "id": "qa-prep",
+      "text": "[Q&A 대비] 섹션이 존재하고 최소 2개 Q&A를 포함한다",
+      "type": "programmatic"
+    }
+  ]
+}

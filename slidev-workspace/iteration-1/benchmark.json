@@ -1,0 +1,112 @@
+{
+  "skill_name": "slidev",
+  "iteration": 1,
+  "timestamp": "2026-03-21T00:15:00Z",
+  "configurations": [
+    {
+      "name": "with_skill",
+      "description": "Using updated slidev skill with UnoCSS and execution guide references"
+    },
+    {
+      "name": "without_skill",
+      "description": "Baseline: no skill, built-in knowledge only"
+    }
+  ],
+  "evals": [
+    {
+      "eval_id": 1,
+      "eval_name": "docker-slides-creation",
+      "results": {
+        "with_skill": {
+          "pass_rate": 0.875,
+          "passed": 7,
+          "total": 8,
+          "tokens": 36111,
+          "duration_seconds": 103.8,
+          "failed_assertions": ["canvas-overflow-safety"]
+        },
+        "without_skill": {
+          "pass_rate": 0.625,
+          "passed": 5,
+          "total": 8,
+          "tokens": 24357,
+          "duration_seconds": 109.8,
+          "failed_assertions": ["slide-count-target", "canvas-overflow-safety", "presenter-notes"]
+        }
+      }
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "export-troubleshoot",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "passed": 6,
+          "total": 6,
+          "tokens": 32695,
+          "duration_seconds": 78.8,
+          "failed_assertions": []
+        },
+        "without_skill": {
+          "pass_rate": 0.333,
+          "passed": 2,
+          "total": 6,
+          "tokens": 21064,
+          "duration_seconds": 55.9,
+          "failed_assertions": ["tty-problem-explained", "script-wrapper-pattern", "exit-code-143", "failing-patterns-warned"]
+        }
+      }
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "unocss-card-layout",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "passed": 6,
+          "total": 6,
+          "tokens": 34931,
+          "duration_seconds": 114.9,
+          "failed_assertions": []
+        },
+        "without_skill": {
+          "pass_rate": 1.0,
+          "passed": 6,
+          "total": 6,
+          "tokens": 25021,
+          "duration_seconds": 91.9,
+          "failed_assertions": []
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "with_skill": {
+      "mean_pass_rate": 0.958,
+      "total_passed": 19,
+      "total_assertions": 20,
+      "mean_tokens": 34579,
+      "mean_duration_seconds": 99.2
+    },
+    "without_skill": {
+      "mean_pass_rate": 0.653,
+      "total_passed": 13,
+      "total_assertions": 20,
+      "mean_tokens": 23481,
+      "mean_duration_seconds": 85.9
+    },
+    "delta": {
+      "pass_rate": "+30.5%",
+      "tokens": "+47.3%",
+      "duration": "+15.5%"
+    }
+  },
+  "analyst_observations": [
+    "Eval 2 (export troubleshoot)에서 가장 큰 차이: with_skill 6/6 vs without_skill 2/6. TTY 문제, script wrapper, exit code 143은 스킬에 고유한 지식으로, 모델의 기본 지식에 없음.",
+    "Eval 1 (slide creation): canvas-overflow-safety는 양쪽 모두 실패. docker-compose.yml 같은 긴 코드 블록 분할이 스킬에서도 충분히 강조되지 않음 → 개선 필요.",
+    "Eval 3 (UnoCSS cards): 양쪽 모두 6/6 통과하지만 질적 차이 존재. with_skill은 forward:delay-*, v-motion, 캔버스 제약 등 Slidev 고유 기능 활용. without_skill은 일반 Tailwind 접근.",
+    "presenter-notes: without_skill은 Eval 1에서 발표자 노트를 전혀 생성하지 않음. 스킬이 이를 명시적으로 상기시킴.",
+    "토큰 사용량: with_skill이 평균 47% 더 많은 토큰 사용 (레퍼런스 파일 읽기 때문). 그러나 품질 향상이 비용을 정당화함.",
+    "Non-discriminating assertion: unocss-classes는 양쪽 모두 항상 통과 — 모델의 기본 UnoCSS/Tailwind 지식이 이미 충분함."
+  ]
+}

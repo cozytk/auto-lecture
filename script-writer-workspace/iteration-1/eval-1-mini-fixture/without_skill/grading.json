@@ -1,0 +1,35 @@
+{
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "완전성: 12개 슬라이드 중 6개에 [스크립트] 블록 존재",
+      "passed": true,
+      "evidence": "6/12 slides have [스크립트]"
+    },
+    {
+      "text": "[click] 싱크: [click] 마커 0개 존재",
+      "passed": false,
+      "evidence": "[click]: 0, v-click elements: 10"
+    },
+    {
+      "text": "구어체: 존댓말 패턴 22개, 문어체 패턴 0개",
+      "passed": true,
+      "evidence": "Polite: 22, Formal: 0"
+    },
+    {
+      "text": "Q&A 대비: [Q&A 대비] 섹션 0개, 질문 0개",
+      "passed": false,
+      "evidence": "Q&A sections: 0, Questions: 0"
+    },
+    {
+      "text": "시간 산정: '시간:' 마커 0개",
+      "passed": false,
+      "evidence": "Time markers: 0"
+    },
+    {
+      "text": "전환 멘트: '전환:' 마커 0개",
+      "passed": false,
+      "evidence": "Transition markers: 0"
+    }
+  ]
+}

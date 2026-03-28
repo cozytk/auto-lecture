@@ -1,0 +1,19 @@
+{
+  "name": "mcp-vs-cli-slides",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "^52.14.1",
+    "@slidev/theme-default": "^0.25.0",
+    "@slidev/types": "^52.14.1",
+    "playwright": "^1.58.2"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.58.2"
+  }
+}

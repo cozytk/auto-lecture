@@ -1,0 +1,37 @@
+# MCP 서버 만들기 — 자동화 스크립트
+
+# 환경 준비: 의존성 설치 및 초기 설정
+setup:
+    cd src/i-do && uv init --no-readme -q 2>/dev/null || true
+    cd src/i-do && uv add "mcp[cli]" -q
+    cd src/we-do && uv init --no-readme -q 2>/dev/null || true
+    cd src/we-do && uv add "mcp[cli]" -q
+    cd src/you-do && uv init --no-readme -q 2>/dev/null || true
+    cd src/you-do && uv add "mcp[cli]" -q
+    cd solution && uv init --no-readme -q 2>/dev/null || true
+    cd solution && uv add "mcp[cli]" -q
+    @echo "✓ 모든 환경 준비 완료"
+
+# 실행: I DO 시연용 MCP 서버 실행
+run:
+    cd src/i-do && uv run python server.py
+
+# 검증: 각 단계 서버의 import 및 도구 등록 확인
+test:
+    @echo "=== I DO 서버 검증 ==="
+    cd src/i-do && uv run python -c "from server import mcp; print(f'I DO: 서버 로드 성공')"
+    @echo "=== WE DO 서버 검증 ==="
+    cd src/we-do && uv run python -c "from server import mcp; print(f'WE DO: 서버 로드 성공')"
+    @echo "=== YOU DO 서버 검증 ==="
+    cd src/you-do && uv run python -c "from server import mcp; print(f'YOU DO: 서버 로드 성공')"
+    @echo "=== Solution 서버 검증 ==="
+    cd solution && uv run python -c "from server import mcp; print(f'Solution: 서버 로드 성공')"
+    @echo "✓ 모든 서버 검증 통과"
+
+# 정리: 실습 환경 초기화
+clean:
+    rm -rf src/i-do/.venv src/i-do/uv.lock src/i-do/pyproject.toml
+    rm -rf src/we-do/.venv src/we-do/uv.lock src/we-do/pyproject.toml
+    rm -rf src/you-do/.venv src/you-do/uv.lock src/you-do/pyproject.toml
+    rm -rf solution/.venv solution/uv.lock solution/pyproject.toml
+    @echo "✓ 환경 정리 완료"

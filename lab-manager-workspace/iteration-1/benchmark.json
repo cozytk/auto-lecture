@@ -1,0 +1,75 @@
+{
+  "skill_name": "lab-manager",
+  "iteration": 1,
+  "configurations": [
+    {
+      "name": "new_skill",
+      "label": "New Skill (v2 — 4-phase with research)",
+      "results": [
+        {
+          "eval_id": 0,
+          "eval_name": "basic-lab-creation",
+          "pass_rate": 1.0,
+          "passed": 9,
+          "total": 9,
+          "tokens": 80930,
+          "duration_seconds": 542.8
+        },
+        {
+          "eval_id": 1,
+          "eval_name": "constrained-format-selection",
+          "pass_rate": 1.0,
+          "passed": 8,
+          "total": 8,
+          "tokens": 76140,
+          "duration_seconds": 487.3
+        }
+      ],
+      "aggregate": {
+        "mean_pass_rate": 1.0,
+        "stddev_pass_rate": 0.0,
+        "mean_tokens": 78535,
+        "stddev_tokens": 2395,
+        "mean_duration_seconds": 515.05,
+        "stddev_duration_seconds": 27.75
+      }
+    },
+    {
+      "name": "old_skill",
+      "label": "Old Skill (v1 — no research phase)",
+      "results": [
+        {
+          "eval_id": 0,
+          "eval_name": "basic-lab-creation",
+          "pass_rate": 1.0,
+          "passed": 9,
+          "total": 9,
+          "tokens": 79539,
+          "duration_seconds": 560.8
+        },
+        {
+          "eval_id": 1,
+          "eval_name": "constrained-format-selection",
+          "pass_rate": 0.75,
+          "passed": 6,
+          "total": 8,
+          "tokens": 57993,
+          "duration_seconds": 432.5
+        }
+      ],
+      "aggregate": {
+        "mean_pass_rate": 0.875,
+        "stddev_pass_rate": 0.125,
+        "mean_tokens": 68766,
+        "stddev_tokens": 10773,
+        "mean_duration_seconds": 496.65,
+        "stddev_duration_seconds": 64.15
+      }
+    }
+  ],
+  "delta": {
+    "pass_rate": "+12.5%p (1.000 vs 0.875)",
+    "tokens": "+14.2% (78535 vs 68766)",
+    "duration": "+3.7% (515s vs 497s)"
+  }
+}

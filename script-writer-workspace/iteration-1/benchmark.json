@@ -1,0 +1,78 @@
+{
+  "skill_name": "script-writer",
+  "iteration": 1,
+  "configurations": [
+    {
+      "name": "with_skill",
+      "label": "새 스킬 적용",
+      "evals": [
+        {
+          "eval_name": "mini-fixture-scripts",
+          "pass_rate": 1.0,
+          "passed": 6,
+          "total": 6,
+          "duration_seconds": 174.1,
+          "total_tokens": 52878
+        },
+        {
+          "eval_name": "code-slide-depth",
+          "pass_rate": 1.0,
+          "passed": 4,
+          "total": 4,
+          "duration_seconds": 75.8,
+          "total_tokens": 35556
+        }
+      ],
+      "aggregate": {
+        "pass_rate": 1.0,
+        "mean_duration_seconds": 124.95,
+        "mean_tokens": 44217
+      }
+    },
+    {
+      "name": "without_skill",
+      "label": "Baseline (스킬 없음)",
+      "evals": [
+        {
+          "eval_name": "mini-fixture-scripts",
+          "pass_rate": 0.33,
+          "passed": 2,
+          "total": 6,
+          "duration_seconds": 84.1,
+          "total_tokens": 26980
+        },
+        {
+          "eval_name": "code-slide-depth",
+          "pass_rate": 0.25,
+          "passed": 1,
+          "total": 4,
+          "duration_seconds": 41.7,
+          "total_tokens": 20521
+        }
+      ],
+      "aggregate": {
+        "pass_rate": 0.30,
+        "mean_duration_seconds": 62.9,
+        "mean_tokens": 23750
+      }
+    }
+  ],
+  "delta": {
+    "pass_rate": "+70pp",
+    "duration": "+98.6% (더 오래 걸리지만 품질이 압도적)",
+    "tokens": "+86.2%"
+  },
+  "analysis": {
+    "key_findings": [
+      "스킬 적용 시 100% pass rate (10/10) vs baseline 30% (3/10)",
+      "baseline은 [click] 마커, Q&A 대비, 시간 산정, 전환 멘트, 헷갈림 포인트를 전혀 생성하지 못함",
+      "baseline이 통과한 항목(완전성, 줄 단위 해설, 구어체)은 LLM의 기본 능력으로도 가능한 것들",
+      "스킬이 차별화를 만드는 영역: 구조화된 메타데이터([click], 시간, 전환, Q&A)"
+    ],
+    "non_discriminating_assertions": [
+      "구어체 (baseline도 통과 - 한국어 프롬프트에 자연스럽게 반응)",
+      "줄 단위 해설 (프롬프트에 명시적으로 요청했으므로 baseline도 수행)"
+    ],
+    "time_token_tradeoff": "스킬 적용 시 토큰 ~86% 증가, 시간 ~99% 증가. 하지만 pass rate가 30%→100%로 향상되어 충분히 정당화됨"
+  }
+}

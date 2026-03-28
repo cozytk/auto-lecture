@@ -1,0 +1,35 @@
+{
+  "run_id": "eval-unocss-cards-with_skill",
+  "expectations": [
+    {
+      "text": "unocss-bg-classes",
+      "passed": true,
+      "evidence": "answer.md lists bg-slate-800, bg-slate-800/80, bg-gray-800/50, bg-blue-900/30. example-slide.md uses bg-slate-800/80, bg-blue-900/30, bg-green-900/30, bg-purple-900/30, bg-orange-900/30."
+    },
+    {
+      "text": "rounded-shadow-classes",
+      "passed": true,
+      "evidence": "answer.md documents rounded-lg, rounded-xl and shadow-lg, shadow-xl with tables. example-slide.md uses rounded-xl + shadow-xl on all cards."
+    },
+    {
+      "text": "v-click-card-integration",
+      "passed": true,
+      "evidence": "answer.md section 3 shows v-click on individual cards with three methods (basic, forward:delay, v-motion). example-slide.md applies v-click to every individual card div across all 5 patterns."
+    },
+    {
+      "text": "working-slide-example",
+      "passed": true,
+      "evidence": "example-slide.md has complete frontmatter (theme: default, title, transition: fade), --- slide separators, and 5 copy-pasteable slide patterns."
+    },
+    {
+      "text": "dark-mode-awareness",
+      "passed": true,
+      "evidence": "answer.md has dedicated section '4. 다크 모드 대응' explaining dark: prefix usage (dark:bg-slate-800/80, dark:border-gray-700). example-slide.md pattern 5 demonstrates light/dark dual-mode cards with dark: prefix classes."
+    },
+    {
+      "text": "padding-spacing",
+      "passed": true,
+      "evidence": "answer.md lists p-4, p-6, px-6 py-4, mt-4, gap-4 with pixel values. example-slide.md uses p-5, p-6, gap-4, gap-5, mt-4, mt-6 throughout."
+    }
+  ]
+}

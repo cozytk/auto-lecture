@@ -1,0 +1,24 @@
+{
+  "name": "ai-agent-day2-slides",
+  "version": "1.0.0",
+  "description": "AI Agent 전문 개발 과정 Day 2 슬라이드",
+  "main": "index.js",
+  "scripts": {
+    "dev": "slidev slides.md",
+    "build": "slidev build slides.md",
+    "export": "slidev export slides.md"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@slidev/cli": "^52.14.1",
+    "@slidev/theme-default": "^0.25.0",
+    "@slidev/types": "^52.14.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2",
+    "playwright-chromium": "^1.58.2"
+  }
+}

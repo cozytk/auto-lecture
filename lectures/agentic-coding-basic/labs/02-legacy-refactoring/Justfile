@@ -1,0 +1,75 @@
+# Lab 02: 레거시 코드 리팩토링 + 테스트 생성
+# 사전 요구: Python 3.8+, 표준 라이브러리만 사용
+
+# 환경 준비 및 확인
+setup:
+    @echo "=== 환경 확인 ==="
+    @python3 --version
+    @echo ""
+    @echo "=== 파일 구조 확인 ==="
+    @ls -la src/
+    @ls -la src/data/
+    @echo ""
+    @echo "=== 레거시 코드 줄 수 확인 ==="
+    @wc -l src/legacy_analyzer.py
+    @echo ""
+    @echo "준비 완료. 'just run'으로 레거시 코드를 실행하세요."
+
+# 레거시 코드 실행 (sample_data.csv)
+run:
+    @echo "=== 레거시 코드 실행 ==="
+    @cd src && python3 legacy_analyzer.py data/sample_data.csv
+
+# 레거시 코드: 엣지 케이스 데이터로 실행
+run-edge:
+    @echo "=== 레거시 코드 (엣지 케이스) ==="
+    @cd src && python3 legacy_analyzer.py data/edge_case.csv
+
+# 레거시 코드: 빈 파일로 실행 (에러 확인)
+run-empty:
+    @echo "=== 레거시 코드 (빈 파일) — 에러 발생 예상 ==="
+    @cd src && python3 legacy_analyzer.py data/empty.csv || echo "❌ 에러 발생 (예상된 동작)"
+
+# 솔루션 코드 실행
+run-solution:
+    @echo "=== 리팩토링된 솔루션 실행 ==="
+    @cd solution && python3 main.py ../src/data/sample_data.csv
+
+# 솔루션: 엣지 케이스 실행
+run-solution-edge:
+    @echo "=== 솔루션 (엣지 케이스) ==="
+    @cd solution && python3 main.py ../src/data/edge_case.csv || echo "엣지 케이스 처리 결과 위 참고"
+
+# 솔루션: 빈 파일 실행 (우아한 에러 처리 확인)
+run-solution-empty:
+    @echo "=== 솔루션 (빈 파일) — 우아한 에러 처리 ==="
+    @cd solution && python3 main.py ../src/data/empty.csv || echo "빈 파일 처리 완료"
+
+# 테스트 실행
+test:
+    @echo "=== 솔루션 테스트 실행 ==="
+    @cd solution && python3 test_analyzer.py
+
+# 레거시 vs 솔루션 출력 비교
+compare:
+    @echo "=== 레거시 코드 출력 ==="
+    @cd src && python3 legacy_analyzer.py data/sample_data.csv
+    @echo ""
+    @echo "=== 솔루션 출력 ==="
+    @cd solution && python3 main.py ../src/data/sample_data.csv
+
+# 솔루션 코드 라인 수 통계 (리팩토링 효과 확인)
+stats:
+    @echo "=== 코드 통계 ==="
+    @echo "-- 레거시 (단일 파일) --"
+    @wc -l src/legacy_analyzer.py
+    @echo ""
+    @echo "-- 솔루션 (모듈화) --"
+    @wc -l solution/config.py solution/main.py solution/analyzer/*.py solution/test_analyzer.py
+
+# 정리 (생성된 JSON 결과 및 캐시 제거)
+clean:
+    @find . -name "result.json" -delete 2>/dev/null || true
+    @find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+    @find . -name "*.pyc" -delete 2>/dev/null || true
+    @echo "정리 완료"

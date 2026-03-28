@@ -1,0 +1,37 @@
+{
+  "eval_id": 3,
+  "eval_name": "unocss-card-layout",
+  "prompt": "slidev 슬라이드에서 다크 배경 위에 카드 형태 레이아웃을 만들고 싶어. bg-slate-800 같은 배경에 둥근 모서리, 그림자 효과를 주고 v-click으로 하나씩 나타나게 하고 싶어. UnoCSS 클래스를 어떻게 쓰면 돼?",
+  "assertions": [
+    {
+      "name": "unocss-bg-classes",
+      "description": "Uses appropriate background classes (bg-slate-800, bg-gray-800/50, etc.)",
+      "check": "contains bg-slate or bg-gray background classes"
+    },
+    {
+      "name": "rounded-shadow-classes",
+      "description": "Uses rounded and shadow utility classes",
+      "check": "contains rounded-lg or rounded-xl AND shadow-lg or shadow-xl"
+    },
+    {
+      "name": "v-click-card-integration",
+      "description": "Shows v-click on individual cards for progressive reveal",
+      "check": "v-click is applied to card div elements"
+    },
+    {
+      "name": "working-slide-example",
+      "description": "Provides a complete, copy-pasteable slide code example",
+      "check": "contains a complete slide with --- separators and frontmatter"
+    },
+    {
+      "name": "dark-mode-awareness",
+      "description": "Mentions dark mode or dark: prefix for theme compatibility",
+      "check": "mentions dark mode, dark: prefix, or dark theme consideration"
+    },
+    {
+      "name": "padding-spacing",
+      "description": "Uses padding and margin classes for proper card spacing",
+      "check": "contains p-4/p-6 and gap/mt/mb spacing classes"
+    }
+  ]
+}

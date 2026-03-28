@@ -1,0 +1,86 @@
+{
+  "description": "Golden Test Set 템플릿. 프로젝트에 맞게 test_cases를 수정하세요.",
+  "version": "1.0",
+  "test_cases": [
+    {
+      "id": "happy_01",
+      "input": "TODO: 정상적인 사용자 입력 #1",
+      "expected_output": ["TODO: 기대 키워드1", "TODO: 기대 키워드2"],
+      "category": "happy_path",
+      "difficulty": "easy",
+      "description": "기본적인 정상 요청"
+    },
+    {
+      "id": "happy_02",
+      "input": "TODO: 정상적인 사용자 입력 #2",
+      "expected_output": ["TODO: 기대 키워드"],
+      "category": "happy_path",
+      "difficulty": "easy",
+      "description": "다른 유형의 정상 요청"
+    },
+    {
+      "id": "happy_03",
+      "input": "TODO: 정상적인 사용자 입력 #3",
+      "expected_output": ["TODO: 기대 키워드"],
+      "category": "happy_path",
+      "difficulty": "medium",
+      "description": "중간 난이도 정상 요청"
+    },
+    {
+      "id": "happy_04",
+      "input": "TODO: 정상적인 사용자 입력 #4",
+      "expected_output": ["TODO: 기대 키워드"],
+      "category": "happy_path",
+      "difficulty": "medium",
+      "description": "다단계 추론이 필요한 요청"
+    },
+    {
+      "id": "happy_05",
+      "input": "TODO: 정상적인 사용자 입력 #5",
+      "expected_output": ["TODO: 기대 키워드"],
+      "category": "happy_path",
+      "difficulty": "hard",
+      "description": "복합적인 정상 요청"
+    },
+    {
+      "id": "edge_01",
+      "input": "",
+      "expected_output": ["오류", "입력"],
+      "category": "edge_case",
+      "difficulty": "easy",
+      "description": "빈 입력 처리"
+    },
+    {
+      "id": "edge_02",
+      "input": "TODO: 매우 긴 입력 텍스트 (500자 이상으로 작성)",
+      "expected_output": ["TODO: 기대 키워드"],
+      "category": "edge_case",
+      "difficulty": "medium",
+      "description": "긴 입력 처리"
+    },
+    {
+      "id": "edge_03",
+      "input": "TODO: 특수문자나 이모지가 포함된 입력 🤖💡",
+      "expected_output": ["TODO: 기대 키워드"],
+      "category": "edge_case",
+      "difficulty": "medium",
+      "description": "특수문자/이모지 처리"
+    },
+    {
+      "id": "failure_01",
+      "input": "TODO: 존재하지 않는 데이터에 대한 질문",
+      "expected_output": ["찾을 수 없", "없습니다", "모르"],
+      "category": "failure_case",
+      "difficulty": "easy",
+      "description": "정보 없음 응답 처리"
+    },
+    {
+      "id": "failure_02",
+      "input": "TODO: Agent 범위 밖의 요청",
+      "expected_output": ["할 수 없", "범위", "지원하지"],
+      "category": "failure_case",
+      "difficulty": "medium",
+      "description": "범위 밖 요청 거절 처리"
+    }
+  ]
+}

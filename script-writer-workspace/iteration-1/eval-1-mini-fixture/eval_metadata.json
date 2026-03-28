@@ -1,0 +1,37 @@
+{
+  "eval_id": 1,
+  "eval_name": "mini-fixture-scripts",
+  "prompt": "6개 슬라이드 전체에 발표자 대본 작성 (가이드 기반, 주니어 개발자 대상)",
+  "assertions": [
+    {
+      "id": "completeness",
+      "text": "6개 슬라이드 모두에 [스크립트] 블록이 존재한다",
+      "type": "programmatic"
+    },
+    {
+      "id": "click-sync",
+      "text": "v-click 요소가 있는 슬라이드에서 [click] 수가 v-click 단계 수와 일치한다",
+      "type": "programmatic"
+    },
+    {
+      "id": "conversational-tone",
+      "text": "대본이 구어체(~입니다/~합니다)로 작성되고 문어체(~이다/~한다)가 없다",
+      "type": "programmatic"
+    },
+    {
+      "id": "qa-sections",
+      "text": "개념/비교 슬라이드(슬라이드 4,5,6)에 [Q&A 대비] 섹션이 있고 각 최소 2개 Q&A 포함",
+      "type": "programmatic"
+    },
+    {
+      "id": "time-markers",
+      "text": "모든 슬라이드 대본에 '시간:' 마커가 존재한다",
+      "type": "programmatic"
+    },
+    {
+      "id": "transition-markers",
+      "text": "마지막 슬라이드를 제외한 모든 슬라이드에 '전환:' 마커가 존재한다",
+      "type": "programmatic"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "줄 단위 해설: 6/6 명령어 설명",
+      "passed": true,
+      "evidence": "Found: ['mkdir', 'git init', 'git add', 'git status', 'git commit', 'git log'], Missing: []"
+    },
+    {
+      "text": "[click] 정확도: 6개 (목표: 6개)",
+      "passed": true,
+      "evidence": "[click] count: 6"
+    },
+    {
+      "text": "헷갈림 포인트: 💡 마커 2개",
+      "passed": true,
+      "evidence": "💡 markers: 2"
+    },
+    {
+      "text": "Q&A 대비: 존재=예, 질문 2개",
+      "passed": true,
+      "evidence": "Q&A section: True, Questions: 2"
+    }
+  ]
+}

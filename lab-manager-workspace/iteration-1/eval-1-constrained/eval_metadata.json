@@ -1,0 +1,47 @@
+{
+  "eval_id": 1,
+  "eval_name": "constrained-format-selection",
+  "prompt": "mcp-vs-cli 주제의 실습을 만들어줘. 특히 MCP 서버 만들기는 코드 실습으로, CLI vs MCP 비교는 README 중심 실습으로 설계해줘.",
+  "assertions": [
+    {
+      "id": "a1-mcp-code-lab",
+      "text": "MCP 서버 관련 실습이 코드 실습으로 생성됨 (src/ + Justfile 존재)",
+      "type": "design"
+    },
+    {
+      "id": "a1-comparison-readme",
+      "text": "CLI vs MCP 비교 실습이 README 중심으로 생성됨 (Justfile 없음, artifacts/ 또는 README 내 템플릿)",
+      "type": "design"
+    },
+    {
+      "id": "a1-three-stages",
+      "text": "모든 README.md에 I DO, WE DO, YOU DO 3단계가 포함됨",
+      "type": "content"
+    },
+    {
+      "id": "a1-code-quality",
+      "text": "코드 실습의 src/i-do/ 코드가 실행 가능한 수준 (import, 함수 정의 등 완성형)",
+      "type": "accuracy"
+    },
+    {
+      "id": "a1-todo-markers",
+      "text": "we-do/와 you-do/에 TODO: 주석이 포함됨",
+      "type": "content"
+    },
+    {
+      "id": "a1-feedback",
+      "text": "labs/feedback.md가 생성됨",
+      "type": "structural"
+    },
+    {
+      "id": "a1-outline-present",
+      "text": "아웃라인/실습 설계표가 출력 또는 summary에 포함됨",
+      "type": "process"
+    },
+    {
+      "id": "a1-hints",
+      "text": "YOU DO 섹션에 힌트가 접이식(details)으로 제공됨",
+      "type": "content"
+    }
+  ]
+}

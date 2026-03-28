@@ -1,0 +1,11 @@
+id,name,age,score,salary,department
+1,정상데이터,30,85.0,3500000,engineering
+2,결측값있음,25,,3200000,marketing
+3,나이없음,,78.5,2900000,engineering
+4,,이름없음,90.0,4000000,hr
+5,급여없음,35,82.3,,marketing
+6,정상데이터2,28,88.0,3100000,engineering
+7,,,,,
+8,이상치점수,32,150.0,3400000,engineering
+9,음수급여,27,75.5,-1000000,marketing
+10,정상데이터3,33,79.8,3800000,hr

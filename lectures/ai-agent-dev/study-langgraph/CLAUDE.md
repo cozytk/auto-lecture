@@ -1,0 +1,3 @@
+- @context7을 통하여 Langchan & Langgraph 1.1.3버전 코드를 기준으로 작성할 것.
+- Openai API 사용. GPT5.4 모델 사용.
+- LangGraph v1에서 `langgraph.prebuilt.create_react_agent`는 deprecated. 대신 `from langchain.agents import create_agent`를 사용할 것.

@@ -1,0 +1,52 @@
+{
+  "eval_id": 0,
+  "eval_name": "basic-lab-creation",
+  "prompt": "mcp-vs-cli 주제의 실습을 만들어줘. lectures/mcp-vs-cli/guide/ 에 가이드가 있어.",
+  "assertions": [
+    {
+      "id": "a0-structure",
+      "text": "labs/ 디렉토리에 최소 2개 이상의 실습 디렉토리가 생성됨",
+      "type": "structural"
+    },
+    {
+      "id": "a0-readme",
+      "text": "모든 실습 디렉토리에 README.md가 존재",
+      "type": "structural"
+    },
+    {
+      "id": "a0-three-stages",
+      "text": "모든 README.md에 I DO, WE DO, YOU DO 3단계가 포함됨",
+      "type": "content"
+    },
+    {
+      "id": "a0-time-estimate",
+      "text": "각 단계에 예상 소요 시간이 명시됨",
+      "type": "content"
+    },
+    {
+      "id": "a0-feedback",
+      "text": "labs/feedback.md가 생성됨",
+      "type": "structural"
+    },
+    {
+      "id": "a0-format-mix",
+      "text": "코드 실습과 README 중심 실습이 혼합되어 있음 (Justfile 있는 것과 없는 것)",
+      "type": "design"
+    },
+    {
+      "id": "a0-solution",
+      "text": "코드 실습에 solution/ 디렉토리가 존재",
+      "type": "structural"
+    },
+    {
+      "id": "a0-technical-accuracy",
+      "text": "MCP 관련 코드가 기술적으로 정확함 (실제 MCP SDK 사용법과 일치)",
+      "type": "accuracy"
+    },
+    {
+      "id": "a0-research-evidence",
+      "text": "공식 문서를 참조한 흔적이 있음 (정확한 API, 버전 정보 등)",
+      "type": "accuracy"
+    }
+  ]
+}

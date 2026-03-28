@@ -1,0 +1,25 @@
+{
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "줄 단위 해설: 6/6 명령어 설명",
+      "passed": true,
+      "evidence": "Found: ['mkdir', 'git init', 'git add', 'git status', 'git commit', 'git log'], Missing: []"
+    },
+    {
+      "text": "[click] 정확도: 0개 (목표: 6개)",
+      "passed": false,
+      "evidence": "[click] count: 0"
+    },
+    {
+      "text": "헷갈림 포인트: 💡 마커 0개",
+      "passed": false,
+      "evidence": "💡 markers: 0"
+    },
+    {
+      "text": "Q&A 대비: 존재=아니오, 질문 0개",
+      "passed": false,
+      "evidence": "Q&A section: False, Questions: 0"
+    }
+  ]
+}

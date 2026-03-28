@@ -1,0 +1,35 @@
+{
+  "run_id": "eval-unocss-cards-without_skill",
+  "expectations": [
+    {
+      "text": "unocss-bg-classes",
+      "passed": true,
+      "evidence": "answer.md lists bg-slate-800, bg-slate-700, bg-slate-700/80, bg-gray-800/60. example-slide.md uses bg-slate-700, bg-slate-800, bg-slate-900, bg-white/5, bg-blue-900/30."
+    },
+    {
+      "text": "rounded-shadow-classes",
+      "passed": true,
+      "evidence": "answer.md documents rounded-lg, rounded-xl, rounded-2xl and shadow-lg, shadow-xl, shadow-2xl. example-slide.md uses rounded-xl, rounded-2xl, rounded-lg with shadow-lg, shadow-xl, shadow-2xl."
+    },
+    {
+      "text": "v-click-card-integration",
+      "passed": true,
+      "evidence": "answer.md section 3 shows v-click on individual card divs and v-click with numbered order (v-click='1', v-click='2'). example-slide.md applies v-click to every individual card across all 7 patterns."
+    },
+    {
+      "text": "working-slide-example",
+      "passed": true,
+      "evidence": "example-slide.md has frontmatter (theme: default, title, colorSchema: dark), --- slide separators, and 7 complete copy-pasteable slide patterns."
+    },
+    {
+      "text": "dark-mode-awareness",
+      "passed": true,
+      "evidence": "answer.md mentions dark backgrounds and recommends 'class: bg-slate-900' or activating dark mode in section 7. example-slide.md uses colorSchema: dark in frontmatter and class: bg-slate-900 on each slide. However, does not mention dark: prefix for dual-mode support."
+    },
+    {
+      "text": "padding-spacing",
+      "passed": true,
+      "evidence": "answer.md lists p-4, p-6, p-8, gap-4, gap-6, space-y-4. example-slide.md uses p-5, p-6, p-8, gap-4, gap-6, gap-8, space-y-4, mt-6, mt-8."
+    }
+  ]
+}

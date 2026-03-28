@@ -1,0 +1,35 @@
+{
+  "run_id": "eval-export-troubleshoot-without_skill",
+  "expectations": [
+    {
+      "text": "playwright-install-command",
+      "passed": true,
+      "evidence": "Shows 'npm install -D playwright-chromium' with devDependency flag"
+    },
+    {
+      "text": "tty-problem-explained",
+      "passed": false,
+      "evidence": "Does not mention TTY or pseudo-terminal at all. Describes the problem as synchronous execution and timeout, missing the root cause"
+    },
+    {
+      "text": "script-wrapper-pattern",
+      "passed": false,
+      "evidence": "No mention of 'script -q /dev/null' wrapper anywhere in the document"
+    },
+    {
+      "text": "polling-pattern",
+      "passed": true,
+      "evidence": "Shows curl polling loop: 'curl -s http://localhost:3030 > /dev/null 2>&1' with seq 1 15 and sleep 1"
+    },
+    {
+      "text": "exit-code-143",
+      "passed": false,
+      "evidence": "No mention of exit code 143 anywhere in the document"
+    },
+    {
+      "text": "failing-patterns-warned",
+      "passed": false,
+      "evidence": "Actually RECOMMENDS nohup+& and run_in_background as valid solutions instead of warning that they fail for Slidev's TTY requirement"
+    }
+  ]
+}

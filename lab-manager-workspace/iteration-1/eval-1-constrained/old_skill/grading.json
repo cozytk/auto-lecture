@@ -1,0 +1,14 @@
+{
+  "eval_id": 1,
+  "configuration": "old_skill",
+  "expectations": [
+    {"text": "MCP 서버 관련 실습이 코드 실습으로 생성됨", "passed": true, "evidence": "01-build-mcp-server에 src/ + Justfile + solution/ 존재"},
+    {"text": "CLI vs MCP 비교 실습이 README 중심으로 생성됨", "passed": true, "evidence": "02-cli-vs-mcp-comparison에 artifacts/ 존재, Justfile 없음"},
+    {"text": "모든 README.md에 I DO, WE DO, YOU DO 3단계가 포함됨", "passed": true, "evidence": "2개 README 모두 3단계 포함"},
+    {"text": "코드 실습의 src/i-do/ 코드가 실행 가능한 수준", "passed": true, "evidence": "Git tools 서버: FastMCP 임포트, 4개 async 함수, 실행 가능. just test 통과"},
+    {"text": "we-do/와 you-do/에 TODO: 주석이 포함됨", "passed": true, "evidence": "코드 파일에 TODO 마커 존재 (grep 결과에 .venv 오염 포함되어 수치 왜곡)"},
+    {"text": "labs/feedback.md가 생성됨", "passed": true, "evidence": "feedback.md 존재"},
+    {"text": "아웃라인/실습 설계표가 출력 또는 summary에 포함됨", "passed": false, "evidence": "summary에 시간 배분표는 있으나, 명시적 '아웃라인 설계' 단계 없음. 구 스킬에 아웃라인 Phase가 없기 때문"},
+    {"text": "YOU DO 섹션에 힌트가 접이식(details)으로 제공됨", "passed": false, "evidence": "코드 실습 README에 3개 details 있으나, README 중심 실습에는 0개. 부분 충족"}
+  ]
+}
